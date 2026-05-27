@@ -9,15 +9,25 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-green?style=flat&logo=leaflet)](https://leafletjs.com/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKolinCunningham%2Fcragtrails)
+
 ---
 
-## Live Demo (Local)
+## Live Demo
+
+**One-click deploy (recommended):**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKolinCunningham%2Fcragtrails)
+
+The project is a standard Next.js 16 app and deploys to Vercel with zero configuration.
+
+**Local development:**
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). 
+Open [http://localhost:3000](http://localhost:3000).
 
 **What you'll experience immediately:**
 - Real-time search that filters both the list **and** the interactive map
