@@ -13,6 +13,8 @@ After clicking:
 2. In ~1-2 minutes you'll get a public URL like `https://cragtrails-abc123.vercel.app`.
 3. Update this README with your new live URL and commit.
 
+**Current official live site:** https://cragtrails.vercel.app
+
 ## Manual Deployment (Vercel CLI)
 
 ```bash

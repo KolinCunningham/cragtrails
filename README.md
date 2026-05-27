@@ -4,7 +4,7 @@
 
 > "Kids climb here. Every photo and route is reviewed." — CragTrails Trust & Safety banner
 
-**🚀 [Live Demo on Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKolinCunningham%2Fcragtrails)** — One click to deploy your own instance
+**🚀 [Live Demo](https://cragtrails.vercel.app)** — Try it now | [Deploy your own](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKolinCunningham%2Fcragtrails)**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
@@ -17,9 +17,9 @@
 
 ## 🚀 Live Demo
 
-**Deployed version (recommended):**
+**Live Demo (recommended):**
 
-→ **[https://cragtrails-kolins-projects.vercel.app](https://cragtrails-kolins-projects.vercel.app)**
+→ **[https://cragtrails.vercel.app](https://cragtrails.vercel.app)**
 
 (Deployed by the project owner on Vercel)
 
