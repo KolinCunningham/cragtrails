@@ -42,6 +42,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+**Real Authentication (Apple, Google, Facebook, Email)**
+
+CragTrails now supports real login via Clerk:
+
+1. Copy `.env.example` → `.env.local`
+2. Sign up at [clerk.com](https://clerk.com) (free tier is generous)
+3. Enable Google, Apple, Facebook, and Email (magic links) providers
+4. Add your `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` to `.env.local`
+5. Restart the dev server
+
+You will then see proper social + email login flows instead of the demo profiles.
+
 **What you'll experience immediately:**
 - Real-time search that filters both the list **and** the interactive map
 - "Near Me" (50-mile radius) using your browser geolocation

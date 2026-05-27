@@ -12,6 +12,7 @@ import { seedData, formatAttribution, getSourceBadge, getAttributionLine } from 
 import type { Route as CanonicalRoute, ConditionReport as CanonicalConditionReport, SourceAttribution } from '@/lib/types/climbing';
 import { SPONSORS } from '@/lib/seed-data';
 import dynamic from 'next/dynamic';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/nextjs';
 
 const CragMap = dynamic(() => import('./components/CragMap'), {
   ssr: false,
@@ -177,6 +178,97 @@ export default function ClimbTrailsLogbook() {
   const [currentProfileId, setCurrentProfileId] = useState<'p_alex' | 'p_sam' | 'p_jordan'>('p_alex');
   const currentProfile = DEMO_PROFILES.find(p => p.id === currentProfileId)!;
   const getProfileKey = (pid: string, key: string) => `ct_${pid}_${key}`;
+
+  // User location for "Near You" personalized suggestions
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  // Get user's location for personalized "Near You" recommendations
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location not supported on this device");
+      return;
+    }
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocationLoading(false);
+        toast.success("Location found! Showing climbs near you.");
+      },
+      (err) => {
+        setLocationLoading(false);
+        toast.error("Could not get your location. Using a demo location instead.");
+        // Fallback to a nice climbing area (Boulder, CO area)
+        setUserLocation({ lat: 40.015, lng: -105.2705 });
+      }
+    );
+  };
+
+  // Haversine formula to calculate distance in miles between two lat/lng points
+  const getDistanceMiles = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3958.8; // Earth radius in miles
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Get nearby routes based on user location (top 6 within 100 miles)
+  const nearbyRoutes = useMemo(() => {
+    if (!userLocation) return [];
+    return [...ROUTES]
+      .map(route => ({
+        ...route,
+        distance: getDistanceMiles(userLocation.lat, userLocation.lng, route.lat, route.lng)
+      }))
+      .filter(r => r.distance <= 100)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 6);
+  }, [userLocation]);
+
+  // Personalized recommendations based on the current user's past sends (history-based)
+  const personalRecommendations = useMemo(() => {
+    if (ticks.length === 0) {
+      // Cold start: show popular routes
+      return [...ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
+    }
+
+    const userGrades = ticks.map(t => t.grade);
+    const userAreas = ticks.map(t => t.areaName);
+    const userStyles = ticks.map(t => 'Sport'); // Simplified for demo; can be enhanced later
+
+    // Score routes based on similarity to what the user has done
+    const scored = ROUTES
+      .filter(r => !ticks.some(tick => tick.routeId === r.id)) // Don't recommend what they've already done
+      .map(route => {
+        let score = 0;
+
+        // Grade similarity (within a couple grades)
+        const routeGradeNum = parseFloat(route.grade.replace(/[^0-9.]/g, '')) || 0;
+        userGrades.forEach(ug => {
+          const ugNum = parseFloat(ug.replace(/[^0-9.]/g, '')) || 0;
+          if (Math.abs(routeGradeNum - ugNum) < 2) score += 3;
+          if (Math.abs(routeGradeNum - ugNum) < 1) score += 2;
+        });
+
+        // Same area bonus
+        if (userAreas.includes(route.areaName)) score += 8;
+
+        // Similar type/style
+        if (userStyles.includes(route.type)) score += 4;
+
+        return { ...route, score };
+      })
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+
+    return scored.length > 0 ? scored : [...ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
+  }, [ticks]);
 
   useEffect(() => {
     // Load current profile (or default). Simple mock "sign in".
@@ -510,11 +602,30 @@ export default function ClimbTrailsLogbook() {
             </div>
             <div className="hidden md:block px-3 py-1 rounded-full bg-[#161B17] border border-[#2A3328] text-xs text-[#A3A8A0]">The logbook that turns browsers into crushers</div>
           </div>
-          <div className="flex flex-wrap gap-2 text-sm">
-            <div className="stat-pill"><Award size={15} className="text-[#22C55E]"/> <span className="stat-number">{userStats.totalSends}</span> sends</div>
-            <div className="stat-pill">Hardest <span className="font-extrabold text-[#FBBF24] ml-1">{userStats.hardest}</span></div>
-            <div className="stat-pill">{userStats.thisMonth} this month</div>
-            <div className="stat-pill">🔥 {userStats.currentStreak}d streak</div>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-wrap gap-2 text-sm">
+              <div className="stat-pill"><Award size={15} className="text-[#166534]"/> <span className="stat-number">{userStats.totalSends}</span> sends</div>
+              <div className="stat-pill">Hardest <span className="font-extrabold text-[#854D0E] ml-1">{userStats.hardest}</span></div>
+            </div>
+
+            {/* Real Authentication - Apple, Google, Facebook, Email */}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-5 py-2 rounded-2xl bg-[#166534] text-white text-sm font-semibold active:scale-[0.985]">
+                  Log in
+                </button>
+              </SignInButton>
+            </SignedOut>
+
+            <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9"
+                  }
+                }}
+              />
+            </SignedIn>
           </div>
         </div>
       </header>
@@ -615,6 +726,46 @@ export default function ClimbTrailsLogbook() {
               ONE-TAP SEND IT
             </button>
 
+            {/* Personalized Recommendations - Location + Personal History (as requested) */}
+            {nearbyRoutes.length > 0 && (
+              <div>
+                <div className="font-bold text-xl mb-3 flex items-center gap-2">📍 Near You</div>
+                <div className="text-sm text-[#A3A8A0] mb-3">Climbs within ~100 miles of your location</div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {nearbyRoutes.map(c => (
+                    <div key={c.id} className="rec-card">
+                      <div className="font-bold">{c.name} <span className="font-normal text-[#A3A8A0]">({c.grade})</span></div>
+                      <div className="text-xs text-[#A3A8A0] mt-0.5">{c.distance.toFixed(0)} miles away</div>
+                      <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#052E16] text-[#4ADE80] font-extrabold text-sm">SEND IT NOW</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!userLocation && (
+              <button 
+                onClick={getUserLocation} 
+                disabled={locationLoading}
+                className="w-full py-3 rounded-2xl border border-[#2A3328] text-[#22C55E] font-semibold active:bg-[#161B17]"
+              >
+                {locationLoading ? "Getting your location..." : "📍 Show climbs near me"}
+              </button>
+            )}
+
+            <div>
+              <div className="font-bold text-xl mb-3 flex items-center gap-2">✨ Recommended for you</div>
+              <div className="text-sm text-[#A3A8A0] mb-3">Based on climbs you've already logged</div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {personalRecommendations.map(c => (
+                  <div key={c.id} className="rec-card">
+                    <div className="font-bold">{c.name} <span className="font-normal text-[#A3A8A0]">({c.grade})</span></div>
+                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#052E16] text-[#4ADE80] font-extrabold text-sm">SEND IT NOW</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div>
               <div className="font-bold text-xl mb-3 flex items-center gap-2"><Users /> Climbers who sent your routes also loved…</div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -650,33 +801,45 @@ export default function ClimbTrailsLogbook() {
         {/* ME TAB - Profile + Stats + Viral Share Generator */}
         {activeTab === 'me' && (
           <div className="max-w-xl mx-auto space-y-8">
-            {/* DEMO PROFILE SWITCHER — only here. Big tappable cards for 10yo fingers. */}
-            {/* "Sign in as different climbers" foundation. Data isolation via per-profile localStorage. */}
+            {/* REAL AUTH via Clerk - Apple, Google, Facebook, Email */}
             <div>
-              <div className="text-[10px] tracking-[2px] text-[#A3A8A0] text-center mb-2">CLIMBERS ON THIS DEVICE (DEMO)</div>
-              <div className="flex flex-col gap-2">
-                {DEMO_PROFILES.map((p) => {
-                  const isActive = p.id === currentProfileId;
-                  const emoji = p.id === 'p_alex' ? '🧗' : p.id === 'p_sam' ? '🧒' : '🧗‍♂️';
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => switchProfile(p.id)}
-                      className={`w-full text-left px-5 py-4 rounded-3xl flex items-center gap-4 active:scale-[0.985] transition-all border ${isActive ? 'bg-[#052E16] border-[#22C55E]' : 'bg-[#161B17] border-[#2A3328] active:bg-[#1f2522]'}`}
-                    >
-                      <div className="text-3xl flex-shrink-0">{emoji}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-[19px] leading-tight">{p.name}</div>
-                        <div className="text-sm text-[#A3A8A0] mt-0.5">{p.subtitle}</div>
-                      </div>
-                      {isActive && (
-                        <div className="ml-auto text-[10px] font-extrabold tracking-widest px-3 py-1 rounded-full bg-[#22C55E] text-[#0A0C0A] flex-shrink-0">CURRENT</div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="text-center text-[10px] text-[#A3A8A0] mt-1.5">Tap to switch • Your data stays private to each climber</div>
+              <SignedIn>
+                <div className="text-center">
+                  <div className="text-5xl mb-2">🧗</div>
+                  <div className="text-3xl font-bold">Welcome back!</div>
+                  <p className="text-[#5C6666] mt-1">You're signed in with real authentication</p>
+                </div>
+              </SignedIn>
+
+              <SignedOut>
+                {/* DEMO PROFILE SWITCHER — fallback when not signed in */}
+                <div>
+                  <div className="text-[10px] tracking-[2px] text-[#A3A8A0] text-center mb-2">DEMO PROFILES (Sign in above for real auth)</div>
+                  <div className="flex flex-col gap-2">
+                    {DEMO_PROFILES.map((p) => {
+                      const isActive = p.id === currentProfileId;
+                      const emoji = p.id === 'p_alex' ? '🧗' : p.id === 'p_sam' ? '🧒' : '🧗‍♂️';
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => switchProfile(p.id)}
+                          className={`w-full text-left px-5 py-4 rounded-3xl flex items-center gap-4 active:scale-[0.985] transition-all border ${isActive ? 'bg-[#052E16] border-[#22C55E]' : 'bg-[#161B17] border-[#2A3328] active:bg-[#1f2522]'}`}
+                        >
+                          <div className="text-3xl flex-shrink-0">{emoji}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-extrabold text-[19px] leading-tight">{p.name}</div>
+                            <div className="text-sm text-[#A3A8A0] mt-0.5">{p.subtitle}</div>
+                          </div>
+                          {isActive && (
+                            <div className="ml-auto text-[10px] font-extrabold tracking-widest px-3 py-1 rounded-full bg-[#22C55E] text-[#0A0C0A] flex-shrink-0">CURRENT</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-center text-[10px] text-[#A3A8A0] mt-1.5">Demo mode • <SignInButton mode="modal"><span className="text-[#166534] underline cursor-pointer">Sign in with Apple, Google, Facebook or Email</span></SignInButton></div>
+                </div>
+              </SignedOut>
             </div>
 
             <div className="text-center">
@@ -698,6 +861,37 @@ export default function ClimbTrailsLogbook() {
                 <div className="text-4xl font-bold text-[#22C55E]">{userStats.thisMonth}</div>
                 <div className="text-sm text-[#A3A8A0] mt-1">This Month</div>
               </div>
+            </div>
+
+            {/* MY COMPLETED CLIMBS — Simple list of what this profile has sent */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-semibold text-lg">My Completed Climbs</div>
+                <button 
+                  onClick={() => setActiveTab('logbook')} 
+                  className="text-sm text-[#4ADE80] font-medium"
+                >
+                  View full logbook →
+                </button>
+              </div>
+              {ticks.length === 0 ? (
+                <div className="text-[#A3A8A0] text-sm">No climbs logged yet for {currentProfile.name}. Head to Discover and tap "SEND IT" on a route!</div>
+              ) : (
+                <div className="space-y-2">
+                  {ticks.slice(0, 5).map((t, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-[#161B17] rounded-2xl px-4 py-3 text-sm">
+                      <div>
+                        <span className="font-semibold">{t.routeName}</span>
+                        <span className="text-[#A3A8A0]"> • {t.grade} • {t.areaName}</span>
+                      </div>
+                      <div className="text-[#4ADE80] font-medium">{t.sendStyle || 'Sent'}</div>
+                    </div>
+                  ))}
+                  {ticks.length > 5 && (
+                    <div className="text-xs text-[#A3A8A0] text-center">+{ticks.length - 5} more in your Logbook</div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
@@ -843,7 +1037,19 @@ export default function ClimbTrailsLogbook() {
         {isSendModalOpen && currentClimb && (
           <div className="fixed inset-0 z-[95] bg-black/80 flex items-end md:items-center justify-center p-0 md:p-6" onClick={closeSendModal}>
             <motion.div initial={{y:70,opacity:0}} animate={{y:0,opacity:1}} exit={{y:50,opacity:0}} className="send-modal w-full md:max-w-lg" onClick={e=>e.stopPropagation()}>
-              <div className="modal-header flex justify-between"><div><div className="text-xs text-[#A3A8A0]">LOG A SEND</div><div className="text-2xl font-extrabold tracking-tight">{currentClimb.name}</div><div className="text-sm text-[#A3A8A0]">{currentClimb.areaName} • {currentClimb.grade}</div><div className="text-[10px] text-[#4ADE80] mt-0.5 font-medium tracking-tight">{getAttributionLine(currentClimb.sources)}</div></div><button onClick={closeSendModal}><X/></button></div>
+              <div className="modal-header flex justify-between">
+                <div>
+                  <div className="text-xs text-[#A3A8A0]">LOG THIS CLIMB FOR {currentProfile.name.toUpperCase()}</div>
+                  <div className="text-2xl font-extrabold tracking-tight">{currentClimb.name}</div>
+                  <div className="text-sm text-[#A3A8A0]">{currentClimb.areaName} • {currentClimb.grade}</div>
+                  <div className="text-[10px] text-[#4ADE80] mt-0.5 font-medium tracking-tight">{getAttributionLine(currentClimb.sources)}</div>
+                  {/* Show if this profile has already completed the route */}
+                  {ticks.some(t => t.routeId === currentClimb.id) && (
+                    <div className="mt-1 inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-[#052E16] text-[#4ADE80] font-medium">✓ You’ve already logged this climb</div>
+                  )}
+                </div>
+                <button onClick={closeSendModal}><X/></button>
+              </div>
 
               <div className="p-5 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
@@ -858,7 +1064,12 @@ export default function ClimbTrailsLogbook() {
                 <div><div className="text-xs mb-1.5 text-[#A3A8A0]">OPTIONAL PHOTO</div>{!sendForm.photoDataUrl ? <label className="photo-upload block cursor-pointer"><Camera className="mx-auto mb-1"/><div className="text-sm">Add a photo of the send</div><input type="file" accept="image/*" onChange={handlePhoto} className="hidden"/>{isUploadingPhoto&&<div>Compressing...</div>}</label> : <div className="relative"><img src={sendForm.photoDataUrl} className="photo-preview"/><button onClick={()=>setSendForm({...sendForm,photoDataUrl:''})} className="absolute top-2 right-2 bg-black/70 rounded-full p-1"><X size={15}/></button></div>}</div>
               </div>
 
-              <div className="p-5 pt-0"><button onClick={submitSend} className="w-full h-16 text-xl font-extrabold rounded-3xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-[#0A0C0A] flex items-center justify-center gap-3">LOG THIS SEND — CRUSHER!</button></div>
+              <div className="p-5 pt-0">
+                <button onClick={submitSend} className="w-full h-16 text-xl font-extrabold rounded-3xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-[#0A0C0A] flex items-center justify-center gap-3">
+                  LOG THIS CLIMB AS COMPLETED FOR ME
+                </button>
+                <div className="text-center text-[10px] text-[#A3A8A0] mt-2">This will be saved under {currentProfile.name} in your profile</div>
+              </div>
             </motion.div>
           </div>
         )}

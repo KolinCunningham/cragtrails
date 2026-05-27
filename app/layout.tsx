@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { ClerkProvider } from '@clerk/nextjs';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -93,25 +94,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
-    >
-      <body className="min-h-full flex flex-col font-sans bg-[#0A0C0A] text-[#F5F5F3]">
-        {children}
-        <Toaster 
-          position="top-center" 
-          richColors 
-          closeButton 
-          className="toaster-climb"
-          toastOptions={{
-            style: {
-              background: '#161B17',
-              border: '1px solid #2A3328',
-              color: '#F5F5F3',
-            },
-          }}
-        />
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      >
+        <body className="min-h-full flex flex-col font-sans bg-white text-[#1F2525]">
+          {children}
+          <Toaster 
+            position="top-center" 
+            richColors 
+            closeButton 
+            className="toaster-climb"
+            toastOptions={{
+              style: {
+                background: '#ffffff',
+                border: '1px solid #E5E2D9',
+                color: '#1F2525',
+              },
+            }}
+          />
 
         {/* PERFECT SEO: Structured Data (JSON-LD) per Next.js docs — Organization + WebSite + Sample Climbing Route for rich results */}
         <script
@@ -173,6 +175,7 @@ export default function RootLayout({
           }}
         />
       </body>
+    </ClerkProvider>
     </html>
   );
 }
