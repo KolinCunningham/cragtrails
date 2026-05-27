@@ -682,11 +682,31 @@ export default function ClimbTrailsLogbook() {
               ))}
             </div>
 
+            {/* Big friendly location button — prompts browser for your location and shows YOU on the map (blue dot) */}
+            <div className="mb-3">
+              {!userLocation ? (
+                <button
+                  onClick={getUserLocation}
+                  disabled={locationLoading}
+                  className="w-full sm:w-auto px-6 py-3 rounded-3xl bg-[#3b82f6] text-white font-extrabold text-base active:scale-[0.985] transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  {locationLoading ? "Finding you..." : "📍 Show me on the map"}
+                </button>
+              ) : (
+                <div className="text-sm text-[#166534] font-medium flex items-center gap-2">
+                  ✅ You're on the map! (blue dot) — tap colored climbs near you
+                </div>
+              )}
+            </div>
+
             <div className="h-[520px] lg:h-[680px] rounded-3xl overflow-hidden border border-[#E5E2D9]">
               <CragMap
                 routes={mapRoutes}
                 selectedRouteId={null}
                 onMarkerClick={handleMapMarkerClick}
+                userLocation={userLocation}
+                center={userLocation ? [userLocation.lat, userLocation.lng] : undefined}
+                zoom={userLocation ? 10 : 7}
               />
             </div>
             <div className="mt-2 text-center text-xs text-[#5C6666]">Green = easy fun. Red = proud sends. Big taps for everyone.</div>

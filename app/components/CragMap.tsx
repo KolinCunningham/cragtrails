@@ -40,6 +40,8 @@ export interface CragMapProps {
   center?: [number, number];
   zoom?: number;
   onMapReady?: (map: L.Map) => void;
+  /** User's current location — shows a distinct "You are here" marker on the map */
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 // Popularity -> radius (heatmap-ish)
@@ -181,7 +183,8 @@ export default function CragMap({
   onMarkerClick, 
   center, 
   zoom = 7, 
-  onMapReady 
+  onMapReady,
+  userLocation 
 }: CragMapProps) {
   // Default center: US West climbing heartland (Bishop / Yosemite area)
   const defaultCenter: [number, number] = [37.6, -118.9];
@@ -209,6 +212,24 @@ export default function CragMap({
           selectedRouteId={selectedRouteId} 
           onMarkerClick={onMarkerClick} 
         />
+
+        {/* Your location marker — bright blue, distinct from climb pins, 10yo-friendly "You are here" */}
+        {userLocation && (
+          <CircleMarker
+            center={[userLocation.lat, userLocation.lng]}
+            radius={11}
+            pathOptions={{
+              color: '#1e40af',      // Strong blue border
+              weight: 3,
+              fillColor: '#3b82f6',  // Bright friendly blue
+              fillOpacity: 0.9,
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -8]} opacity={0.95} className="font-sans text-xs">
+              You are here
+            </Tooltip>
+          </CircleMarker>
+        )}
 
         <MapController 
           center={center} 
