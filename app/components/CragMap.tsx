@@ -155,7 +155,7 @@ function RouteMarkers({ routes, selectedRouteId, onMarkerClick }: {
             <Tooltip direction="top" offset={[0, -6]} opacity={0.95} className="font-sans text-xs">
               {item.isCluster 
                 ? `${item.count} routes @ ${item.route.crag} — click to zoom` 
-                : `${item.route.name} • ${item.route.grade} • ${item.route.crag}`}
+                : `${item.route.name} • ${item.route.grade} • ${item.route.crag} • ★${item.route.stars} • ${item.route.type} • ${item.route.popularity} sends`}
             </Tooltip>
           </CircleMarker>
         );
@@ -197,12 +197,12 @@ export default function CragMap({
   const defaultCenter: [number, number] = [37.6, -118.9];
 
   return (
-    <div className="relative h-full w-full rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-950">
+    <div className="relative h-full w-full rounded-2xl overflow-hidden border border-[#E5E2D9] shadow-xl bg-[#F8F7F4]">
       <MapContainer
         center={center ?? defaultCenter}
         zoom={zoom}
         className="h-full w-full"
-        style={{ background: '#111' }}
+        style={{ background: '#F8F7F4' }}
         zoomControl={true}
         attributionControl={true}
       >
@@ -228,7 +228,7 @@ export default function CragMap({
       </MapContainer>
 
       {/* Zoom / cluster legend + offline hint — NOW BIG + KID FRIENDLY */}
-      <div className="absolute bottom-3 right-3 z-[1000] bg-white/95 dark:bg-zinc-900/95 backdrop-blur px-4 py-2 rounded-xl text-sm font-medium border border-zinc-200 dark:border-zinc-700 shadow text-zinc-700 dark:text-zinc-300 flex flex-col gap-1">
+      <div className="absolute bottom-3 right-3 z-[1000] bg-white/95 backdrop-blur px-4 py-2 rounded-xl text-sm font-medium border border-[#E5E2D9] shadow text-[#1F2525] flex flex-col gap-1">
         <div className="flex items-center gap-2 text-[13px]">
           <span className="inline-block w-3 h-3 rounded-full bg-green-500" /> Easy-peasy
           <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 ml-1" /> Getting fun
@@ -239,7 +239,7 @@ export default function CragMap({
       </div>
 
       {/* Bonus: offline map hint */}
-      <div className="absolute top-3 left-3 z-[1000] max-w-[210px] rounded-md bg-black/70 text-white px-2.5 py-1 text-[9px] leading-tight backdrop-blur font-mono tracking-tight">
+      <div className="absolute top-3 left-3 z-[1000] max-w-[210px] rounded-md bg-white/95 text-[#5C6666] px-2.5 py-1 text-[9px] leading-tight backdrop-blur font-mono tracking-tight border border-[#E5E2D9]">
         OSM tiles. <span className="opacity-75">Offline? Cache tiles via plugins or use dedicated offline maps.</span>
       </div>
     </div>

@@ -16,7 +16,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/n
 
 const CragMap = dynamic(() => import('./components/CragMap'), {
   ssr: false,
-  loading: () => <div className="h-[520px] flex items-center justify-center bg-[#161B17] text-[#A3A8A0]">Loading map…</div>,
+  loading: () => <div className="h-[520px] flex items-center justify-center bg-[#F8F7F4] text-[#5C6666]">Loading map…</div>,
 });
 
 // Full implementation of the 5 core value props as specified by the task.
@@ -646,7 +646,7 @@ export default function ClimbTrailsLogbook() {
         {activeTab === 'map' && (
           <div>
             <div className="section-title mb-3">Explore the map</div>
-            <div className="text-[#A3A8A0] mb-3 text-[15px]">Tap big colored dots to log a send. Filters update markers live.</div>
+            <div className="text-[#5C6666] mb-3 text-[15px]">Tap big colored dots to log a send. Filters update markers live.</div>
 
             {/* Grade + search filters — exact same patterns as Discover and Logbook for zero new concepts */}
             <div className="flex flex-wrap gap-2 mb-3 lg:gap-3 lg:mb-4">
@@ -654,7 +654,7 @@ export default function ClimbTrailsLogbook() {
                 value={mapSearch}
                 onChange={(e) => setMapSearch(e.target.value)}
                 placeholder="Search name, crag, or grade (V4, 5.10...)"
-                className="flex-1 min-w-[220px] bg-[#161B17] border border-[#2A3328] px-5 py-3 rounded-3xl text-base lg:min-w-[280px]"
+                className="flex-1 min-w-[220px] bg-white border border-[#E5E2D9] px-5 py-3 rounded-3xl text-base lg:min-w-[280px] text-[#1F2525]"
               />
               {(['All', 'Easy', 'Moderate', 'Hard'] as const).map((g) => (
                 <button
@@ -667,14 +667,14 @@ export default function ClimbTrailsLogbook() {
               ))}
             </div>
 
-            <div className="h-[520px] rounded-3xl overflow-hidden border border-[#2A3328]">
+            <div className="h-[520px] lg:h-[680px] rounded-3xl overflow-hidden border border-[#E5E2D9]">
               <CragMap
                 routes={mapRoutes}
                 selectedRouteId={null}
                 onMarkerClick={handleMapMarkerClick}
               />
             </div>
-            <div className="mt-2 text-center text-xs text-[#A3A8A0]">Green = easy fun. Red = proud sends. Big taps for everyone.</div>
+            <div className="mt-2 text-center text-xs text-[#5C6666]">Green = easy fun. Red = proud sends. Big taps for everyone.</div>
           </div>
         )}
 
@@ -682,19 +682,24 @@ export default function ClimbTrailsLogbook() {
         {activeTab === 'logbook' && (
           <div>
             <div className="section-title mb-2">Your Personal Logbook</div>
-            <div className="pyramid-container mb-6">
-              <div className="font-bold mb-3">Grade Pyramid — tap a bar to filter timeline</div>
-              {pyramidFiltered.length===0 && <div className="text-[#A3A8A0] py-2">Log sends and your pyramid appears. It is incredibly motivating.</div>}
-              {pyramidFiltered.map(({band,count}) => (
-                <div key={band} className="flex items-center gap-3 mb-1.5 cursor-pointer" onClick={()=>filterPyramid(band)}>
-                  <div className="w-16 text-sm font-bold text-[#A3A8A0] text-right">{band}</div>
-                  <div className={`pyramid-bar ${band.includes('V10')||band.includes('5.13')?'v-pro':band.includes('V6')||band.includes('5.11')?'v-hard':band.includes('V4')||band.includes('5.10')?'v-mid':'v-easy'}`} style={{width:`${Math.max(18,(count/maxPy)*100)}%`}}>{count}</div>
+            {/* Desktop-only spacious two-column premium layout (lg+): pyramid sidebar left for quick visual history, main content (filters + timeline + community) right. Purely additive responsive classes. Mobile stacks exactly as before (block flow, no layout shift, no new UI patterns or tap targets for 10yo users). */}
+            <div className="logbook-desktop-grid lg:grid lg:grid-cols-12 lg:gap-x-8">
+              <div className="lg:col-span-5 xl:col-span-4">
+                <div className="pyramid-container mb-6 lg:mb-0">
+                  <div className="font-bold mb-3">Grade Pyramid — tap a bar to filter timeline</div>
+                  {pyramidFiltered.length===0 && <div className="text-[#5C6666] py-2">Log sends and your pyramid appears. It is incredibly motivating.</div>}
+                  {pyramidFiltered.map(({band,count}) => (
+                    <div key={band} className="flex items-center gap-3 mb-1.5 cursor-pointer" onClick={()=>filterPyramid(band)}>
+                      <div className="w-16 text-sm font-bold text-[#5C6666] text-right">{band}</div>
+                      <div className={`pyramid-bar ${band.includes('V10')||band.includes('5.13')?'v-pro':band.includes('V6')||band.includes('5.11')?'v-hard':band.includes('V4')||band.includes('5.10')?'v-mid':'v-easy'}`} style={{width:`${Math.max(18,(count/maxPy)*100)}%`}}>{count}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+              <div className="lg:col-span-7 xl:col-span-8">
 
             <div className="flex flex-wrap gap-2 mb-4">
-              <input value={logbookFilters.search} onChange={e=>setLogbookFilters({...logbookFilters,search:e.target.value})} placeholder="Search your sends..." className="flex-1 min-w-[200px] bg-[#161B17] border border-[#2A3328] rounded-2xl px-5 py-2 text-sm" />
+              <input value={logbookFilters.search} onChange={e=>setLogbookFilters({...logbookFilters,search:e.target.value})} placeholder="Search your sends..." className="flex-1 min-w-[200px] bg-white border border-[#E5E2D9] rounded-2xl px-5 py-2 text-sm text-[#1F2525]" />
               {['All',...pyramidData.map(p=>p.band)].slice(0,6).map(b=>(<button key={b} onClick={()=>setLogbookFilters({...logbookFilters,gradeBand:b})} className={`filter-chip ${logbookFilters.gradeBand===b?'active':''}`}>{b}</button>))}
             </div>
 
@@ -702,9 +707,9 @@ export default function ClimbTrailsLogbook() {
               {filteredTicks.length===0 && <div className="empty-state">No sends match. Go log your first one!</div>}
               {filteredTicks.map(t => (
                 <div key={t.id} className="log-entry">
-                  <div><span className="log-grade" style={{background:getGradeColor(t.grade),color:'#0A0C0A'}}>{t.grade}</span> <span className="font-extrabold text-[17px]">{t.routeName}</span> <span className="text-[#A3A8A0]">— {t.areaName}</span></div>
-                  <div className="mt-1 flex gap-2 items-center text-sm"><span className="text-[#A3A8A0]">{formatDate(t.date)}</span> <span className="flex text-[#FBBF24]">{Array.from({length:t.stars}).map((_,i)=><Star key={i} size={15} fill="currentColor"/>)}</span> {t.conditions && <span className={`tag-pill tag-${t.conditions.toLowerCase()}`}>{t.conditions}</span>}</div>
-                  {t.notes && <div className="mt-2 italic text-sm text-[#A3A8A0]">“{t.notes}”</div>}
+                  <div><span className="log-grade" style={{background:getGradeColor(t.grade),color:'#0A0C0A'}}>{t.grade}</span> <span className="font-extrabold text-[17px]">{t.routeName}</span> <span className="text-[#5C6666]">— {t.areaName}</span></div>
+                  <div className="mt-1 flex gap-2 items-center text-sm"><span className="text-[#5C6666]">{formatDate(t.date)}</span> <span className="flex text-[#FBBF24]">{Array.from({length:t.stars}).map((_,i)=><Star key={i} size={15} fill="currentColor"/>)}</span> {t.conditions && <span className={`tag-pill tag-${t.conditions.toLowerCase()}`}>{t.conditions}</span>}</div>
+                  {t.notes && <div className="mt-2 italic text-sm text-[#5C6666]">“{t.notes}”</div>}
                   {t.photoUrl && <img src={t.photoUrl} loading="lazy" className="mt-3 rounded-2xl max-h-44" />}
                 </div>
               ))}
@@ -712,15 +717,17 @@ export default function ClimbTrailsLogbook() {
 
             {/* Community beta reports — preserved powerful engagement, now inside the single logbook view */}
             <div className="mt-8">
-              <div className="text-sm text-[#A3A8A0] mb-4">Recent community beta (yours + others)</div>
+              <div className="text-sm text-[#5C6666] mb-4">Recent community beta (yours + others)</div>
               <div className="space-y-3">
                 {conditionReports.slice(0,4).map(r => (
                   <div key={r.id} className="condition-report">
                     <div>{r.emoji} {r.text}</div>
-                    <div className="text-xs text-[#A3A8A0] mt-1">{r.user} • {formatDate(r.date)}</div>
+                    <div className="text-xs text-[#5C6666] mt-1">{r.user} • {formatDate(r.date)}</div>
                   </div>
                 ))}
               </div>
+            </div>
+            </div>
             </div>
           </div>
         )}
@@ -729,8 +736,8 @@ export default function ClimbTrailsLogbook() {
         {activeTab === 'discover' && (
           <div className="space-y-8">
             <div>
-              <div className="text-xs tracking-[3px] text-[#A3A8A0]">WHERE ARE WE SENDING TODAY?</div>
-              <h1 className="text-5xl font-bold tracking-[-2.8px] mt-1">Discover climbs.<br />One-tap send.</h1>
+              <div className="text-xs tracking-[3px] text-[#5C6666]">WHERE ARE WE SENDING TODAY?</div>
+              <h1 className="text-5xl lg:text-6xl font-bold tracking-[-2.8px] lg:tracking-[-3.2px] mt-1">Discover climbs.<br />One-tap send.</h1>
             </div>
 
             <button onClick={() => openSendModal()} className="w-full md:w-auto h-16 px-12 rounded-3xl text-xl font-extrabold bg-[#22C55E] text-[#0A0C0A] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.985]">
@@ -741,13 +748,13 @@ export default function ClimbTrailsLogbook() {
             {nearbyRoutes.length > 0 && (
               <div>
                 <div className="font-bold text-xl mb-3 flex items-center gap-2">📍 Near You</div>
-                <div className="text-sm text-[#A3A8A0] mb-3">Climbs within ~100 miles of your location</div>
+                <div className="text-sm text-[#5C6666] mb-3">Climbs within ~100 miles of your location</div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {nearbyRoutes.map(c => (
                     <div key={c.id} className="rec-card">
-                      <div className="font-bold">{c.name} <span className="font-normal text-[#A3A8A0]">({c.grade})</span></div>
-                      <div className="text-xs text-[#A3A8A0] mt-0.5">{c.distance.toFixed(0)} miles away</div>
-                      <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#052E16] text-[#4ADE80] font-extrabold text-sm">SEND IT NOW</button>
+                      <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
+                      <div className="text-xs text-[#5C6666] mt-0.5">{c.distance.toFixed(0)} miles away</div>
+                      <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
                     </div>
                   ))}
                 </div>
@@ -758,7 +765,7 @@ export default function ClimbTrailsLogbook() {
               <button 
                 onClick={getUserLocation} 
                 disabled={locationLoading}
-                className="w-full py-3 rounded-2xl border border-[#2A3328] text-[#22C55E] font-semibold active:bg-[#161B17]"
+                className="w-full py-3 rounded-2xl border border-[#E5E2D9] text-[#166534] font-semibold active:bg-[#F0FDF4]"
               >
                 {locationLoading ? "Getting your location..." : "📍 Show climbs near me"}
               </button>
@@ -766,12 +773,12 @@ export default function ClimbTrailsLogbook() {
 
             <div>
               <div className="font-bold text-xl mb-3 flex items-center gap-2">✨ Recommended for you</div>
-              <div className="text-sm text-[#A3A8A0] mb-3">Based on climbs you've already logged</div>
+              <div className="text-sm text-[#5C6666] mb-3">Based on climbs you've already logged</div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {personalRecommendations.map(c => (
                   <div key={c.id} className="rec-card">
-                    <div className="font-bold">{c.name} <span className="font-normal text-[#A3A8A0]">({c.grade})</span></div>
-                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#052E16] text-[#4ADE80] font-extrabold text-sm">SEND IT NOW</button>
+                    <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
+                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
                   </div>
                 ))}
               </div>
@@ -782,8 +789,8 @@ export default function ClimbTrailsLogbook() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {recommendations.map(c => (
                   <div key={c.id} className="rec-card">
-                    <div className="font-bold">{c.name} <span className="font-normal text-[#A3A8A0]">({c.grade})</span></div>
-                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#052E16] text-[#4ADE80] font-extrabold text-sm">SEND IT NOW</button>
+                    <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
+                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
                   </div>
                 ))}
               </div>
@@ -796,13 +803,13 @@ export default function ClimbTrailsLogbook() {
             <div>
               <div className="section-title">Find your climb</div>
               <div className="flex gap-2 mb-4 flex-wrap lg:gap-3 lg:mb-5">
-                <input value={discoverSearch} onChange={e=>setDiscoverSearch(e.target.value)} placeholder="Search name / area / grade" className="flex-1 bg-[#161B17] border border-[#2A3328] px-5 py-3 rounded-3xl lg:min-w-[320px]" />
+                <input value={discoverSearch} onChange={e=>setDiscoverSearch(e.target.value)} placeholder="Search name / area / grade" className="flex-1 bg-white border border-[#E5E2D9] px-5 py-3 rounded-3xl lg:min-w-[320px] text-[#1F2525]" />
                 {['All','Boulder','Sport','Trad'].map(t=><button key={t} onClick={()=>setDiscoverType(t as any)} className={`filter-chip ${discoverType===t?'active':''}`}>{t}</button>)}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {discoverClimbs.map(c => {
                   const wish = wishlist.includes(c.id);
-                  return <div key={c.id} className="climb-card"><div className="climb-card-photo" style={{backgroundImage:`url(${c.photoUrl})`}}><button onClick={()=>toggleWishlist(c.id)} className="absolute top-3 right-3 p-2 bg-black/60 rounded-full"><Heart size={17} fill={wish?'#FBBF24':'none'}/></button><span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span></div><div className="p-4"><div className="font-bold text-xl">{c.name}</div><div className="text-sm text-[#A3A8A0]">{c.areaName}</div><div className="mt-1"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#052E16] text-[#4ADE80] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div><div className="mt-3 flex gap-2"><button onClick={()=>openSendModal(c)} className="send-it-mini flex-1 justify-center">SEND IT</button><button onClick={()=>toggleWishlist(c.id)} className="px-4 text-sm border border-[#2A3328] rounded-3xl font-semibold">{wish?'Wishlisted':'Wishlist'}</button></div></div></div>;
+                  return <div key={c.id} className="climb-card"><div className="climb-card-photo" style={{backgroundImage:`url(${c.photoUrl})`}}><button onClick={()=>toggleWishlist(c.id)} className="absolute top-3 right-3 p-2 bg-black/60 rounded-full"><Heart size={17} fill={wish?'#FBBF24':'none'}/></button><span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span></div><div className="p-4"><div className="font-bold text-xl">{c.name}</div><div className="text-sm text-[#5C6666]">{c.areaName}</div><div className="mt-1"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div><div className="mt-3 flex gap-2"><button onClick={()=>openSendModal(c)} className="send-it-mini flex-1 justify-center">SEND IT</button><button onClick={()=>toggleWishlist(c.id)} className="px-4 text-sm border border-[#E5E2D9] rounded-3xl font-semibold">{wish?'Wishlisted':'Wishlist'}</button></div></div></div>;
                 })}
               </div>
             </div>
@@ -825,7 +832,7 @@ export default function ClimbTrailsLogbook() {
               <SignedOut>
                 {/* DEMO PROFILE SWITCHER — fallback when not signed in */}
                 <div>
-                  <div className="text-[10px] tracking-[2px] text-[#A3A8A0] text-center mb-2">DEMO PROFILES (Sign in above for real auth)</div>
+                  <div className="text-[10px] tracking-[2px] text-[#5C6666] text-center mb-2">DEMO PROFILES (Sign in above for real auth)</div>
                   <div className="flex flex-col gap-2">
                     {DEMO_PROFILES.map((p) => {
                       const isActive = p.id === currentProfileId;
@@ -834,12 +841,12 @@ export default function ClimbTrailsLogbook() {
                         <button
                           key={p.id}
                           onClick={() => switchProfile(p.id)}
-                          className={`w-full text-left px-5 py-4 rounded-3xl flex items-center gap-4 active:scale-[0.985] transition-all border ${isActive ? 'bg-[#052E16] border-[#22C55E]' : 'bg-[#161B17] border-[#2A3328] active:bg-[#1f2522]'}`}
+                          className={`w-full text-left px-5 py-4 rounded-3xl flex items-center gap-4 active:scale-[0.985] transition-all border ${isActive ? 'bg-[#DCFCE7] border-[#166534]' : 'bg-white border-[#E5E2D9] active:bg-[#F8F7F4]'}`}
                         >
                           <div className="text-3xl flex-shrink-0">{emoji}</div>
                           <div className="flex-1 min-w-0">
                             <div className="font-extrabold text-[19px] leading-tight">{p.name}</div>
-                            <div className="text-sm text-[#A3A8A0] mt-0.5">{p.subtitle}</div>
+                            <div className="text-sm text-[#5C6666] mt-0.5">{p.subtitle}</div>
                           </div>
                           {isActive && (
                             <div className="ml-auto text-[10px] font-extrabold tracking-widest px-3 py-1 rounded-full bg-[#22C55E] text-[#0A0C0A] flex-shrink-0">CURRENT</div>
@@ -848,7 +855,7 @@ export default function ClimbTrailsLogbook() {
                       );
                     })}
                   </div>
-                  <div className="text-center text-[10px] text-[#A3A8A0] mt-1.5">Demo mode • <SignInButton mode="modal"><span className="text-[#166534] underline cursor-pointer">Sign in with Apple, Google, Facebook or Email</span></SignInButton></div>
+                  <div className="text-center text-[10px] text-[#5C6666] mt-1.5">Demo mode • <SignInButton mode="modal"><span className="text-[#166534] underline cursor-pointer">Sign in with Apple, Google, Facebook or Email</span></SignInButton></div>
                 </div>
               </SignedOut>
             </div>
@@ -856,21 +863,21 @@ export default function ClimbTrailsLogbook() {
             <div className="text-center">
               <div className="text-5xl mb-2">🧗</div>
               <div className="text-3xl font-bold">{currentProfile.name}</div>
-              <div className="text-[#A3A8A0]">{currentProfile.subtitle}</div>
+              <div className="text-[#5C6666]">{currentProfile.subtitle}</div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="bg-[#161B17] rounded-2xl p-5">
-                <div className="text-4xl font-bold text-[#22C55E]">{userStats.totalSends}</div>
-                <div className="text-sm text-[#A3A8A0] mt-1">Total Sends</div>
+              <div className="bg-white border border-[#E5E2D9] rounded-2xl p-5">
+                <div className="text-4xl font-bold text-[#166534]">{userStats.totalSends}</div>
+                <div className="text-sm text-[#5C6666] mt-1">Total Sends</div>
               </div>
-              <div className="bg-[#161B17] rounded-2xl p-5">
-                <div className="text-4xl font-bold text-[#FBBF24]">{userStats.hardest}</div>
-                <div className="text-sm text-[#A3A8A0] mt-1">Hardest Send</div>
+              <div className="bg-white border border-[#E5E2D9] rounded-2xl p-5">
+                <div className="text-4xl font-bold text-[#B45309]">{userStats.hardest}</div>
+                <div className="text-sm text-[#5C6666] mt-1">Hardest Send</div>
               </div>
-              <div className="bg-[#161B17] rounded-2xl p-5">
-                <div className="text-4xl font-bold text-[#22C55E]">{userStats.thisMonth}</div>
-                <div className="text-sm text-[#A3A8A0] mt-1">This Month</div>
+              <div className="bg-white border border-[#E5E2D9] rounded-2xl p-5">
+                <div className="text-4xl font-bold text-[#166534]">{userStats.thisMonth}</div>
+                <div className="text-sm text-[#5C6666] mt-1">This Month</div>
               </div>
             </div>
 
@@ -886,20 +893,20 @@ export default function ClimbTrailsLogbook() {
                 </button>
               </div>
               {ticks.length === 0 ? (
-                <div className="text-[#A3A8A0] text-sm">No climbs logged yet for {currentProfile.name}. Head to Discover and tap "SEND IT" on a route!</div>
+                <div className="text-[#5C6666] text-sm">No climbs logged yet for {currentProfile.name}. Head to Discover and tap "SEND IT" on a route!</div>
               ) : (
                 <div className="space-y-2">
                   {ticks.slice(0, 5).map((t, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-[#161B17] rounded-2xl px-4 py-3 text-sm">
+                    <div key={idx} className="flex items-center justify-between bg-white border border-[#E5E2D9] rounded-2xl px-4 py-3 text-sm">
                       <div>
                         <span className="font-semibold">{t.routeName}</span>
-                        <span className="text-[#A3A8A0]"> • {t.grade} • {t.areaName}</span>
+                        <span className="text-[#5C6666]"> • {t.grade} • {t.areaName}</span>
                       </div>
-                      <div className="text-[#4ADE80] font-medium">{t.sendStyle || 'Sent'}</div>
+                      <div className="text-[#166534] font-medium">{t.sendStyle || 'Sent'}</div>
                     </div>
                   ))}
                   {ticks.length > 5 && (
-                    <div className="text-xs text-[#A3A8A0] text-center">+{ticks.length - 5} more in your Logbook</div>
+                    <div className="text-xs text-[#5C6666] text-center">+{ticks.length - 5} more in your Logbook</div>
                   )}
                 </div>
               )}
@@ -913,8 +920,8 @@ export default function ClimbTrailsLogbook() {
                     <span>{g.label}</span>
                     <span className="font-mono text-[#22C55E]">{g.current}/{g.target}</span>
                   </div>
-                  <div className="h-2.5 bg-[#2A3328] rounded-full overflow-hidden">
-                    <div className="h-2.5 bg-[#22C55E] transition-all" style={{width: `${Math.min(100, (g.current / g.target) * 100)}%`}} />
+                  <div className="h-2.5 bg-[#E5E2D9] rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[#166534] transition-all" style={{width: `${Math.min(100, (g.current / g.target) * 100)}%`}} />
                   </div>
                 </div>
               ))}
@@ -923,14 +930,14 @@ export default function ClimbTrailsLogbook() {
             <div>
               <div className="font-semibold mb-3 text-lg">Wishlist</div>
               {wishlist.length === 0 ? (
-                <div className="text-[#A3A8A0]">Heart climbs from the Discover tab.</div>
+                <div className="text-[#5C6666]">Heart climbs from the Discover tab.</div>
               ) : (
                 wishlist.map(id => {
                   const c = ROUTES.find(r => r.id === id)!;
                   return (
-                    <div key={id} className="flex justify-between items-center bg-[#161B17] rounded-2xl px-5 py-3 mb-2">
-                      <div>{c.name} <span className="text-[#A3A8A0]">({c.grade})</span></div>
-                      <button onClick={() => openSendModal(c)} className="text-[#4ADE80] font-bold">SEND IT</button>
+                    <div key={id} className="flex justify-between items-center bg-white border border-[#E5E2D9] rounded-2xl px-5 py-3 mb-2">
+                      <div>{c.name} <span className="text-[#5C6666]">({c.grade})</span></div>
+                      <button onClick={() => openSendModal(c)} className="text-[#166534] font-bold">SEND IT</button>
                     </div>
                   );
                 })
@@ -938,14 +945,14 @@ export default function ClimbTrailsLogbook() {
             </div>
 
             {/* Instagram Share Card — Beautifully surfaced viral surface (powered by your real logged ticks) */}
-            <div className="pt-6 border-t border-[#2A3328]">
-              <div className="bg-[#161B17] border border-[#2A3328] rounded-3xl p-6 space-y-5">
+            <div className="pt-6 border-t border-[#E5E2D9]">
+              <div className="bg-white border border-[#E5E2D9] rounded-3xl p-6 space-y-5">
                 <div>
                   <div className="flex items-center gap-2 text-[#4ADE80] mb-1">
                     <span className="text-xl">📸</span>
                     <span className="font-bold tracking-tight text-lg">Share the stoke</span>
                   </div>
-                  <div className="text-[#A3A8A0] text-[15px]">Turn your latest real send into a premium vertical card ready for Instagram or Stories. Branded, beautiful, zero effort.</div>
+                  <div className="text-[#5C6666] text-[15px]">Turn your latest real send into a premium vertical card ready for Instagram or Stories. Branded, beautiful, zero effort.</div>
                 </div>
 
                 {/* The beautiful primary button - large, joyful, 10yo-friendly tap target */}
@@ -957,11 +964,11 @@ export default function ClimbTrailsLogbook() {
                   <span>📸</span>
                   <span>{ticks.length > 0 ? "Create Instagram Card from my latest send" : "Log a send to unlock cards"}</span>
                 </button>
-                <div className="text-center text-xs text-[#A3A8A0] -mt-1">1080×1350 • Downloads instantly • #CragTrails in every card</div>
+                <div className="text-center text-xs text-[#5C6666] -mt-1">1080×1350 • Downloads instantly • #CragTrails in every card</div>
 
                 {/* Shareable text options — real data, multiple tones, one-tap copy */}
-                <div className="pt-2 border-t border-[#2A3328]">
-                  <div className="font-semibold text-sm mb-3 text-[#A3A8A0] tracking-wide">SHAREABLE CAPTIONS (tap to copy)</div>
+                <div className="pt-2 border-t border-[#E5E2D9]">
+                  <div className="font-semibold text-sm mb-3 text-[#5C6666] tracking-wide">SHAREABLE CAPTIONS (tap to copy)</div>
                   <div className="space-y-2">
                     {getShareCaptions(getLatestTickForShare()).map((caption, idx) => (
                       <button
@@ -974,7 +981,7 @@ export default function ClimbTrailsLogbook() {
                             alert(caption);
                           });
                         }}
-                        className="w-full text-left bg-[#0A0C0A] hover:bg-[#111714] active:scale-[0.995] border border-[#2A3328] rounded-2xl px-4 py-3 text-[13px] leading-snug text-[#D1D5DB] font-medium transition"
+                        className="w-full text-left bg-[#F8F7F4] hover:bg-white active:scale-[0.995] border border-[#E5E2D9] rounded-2xl px-4 py-3 text-[13px] leading-snug text-[#1F2525] font-medium transition"
                       >
                         {caption}
                         <span className="block text-[10px] text-[#4ADE80] mt-1 font-mono tracking-widest">COPY FOR IG</span>
@@ -989,9 +996,9 @@ export default function ClimbTrailsLogbook() {
             {/* PARTNERS KEEPING IT FREE — strictly Me tab only (no primary flow clutter).
                 Uses the exact existing SPONSORS data from lib/seed-data.ts (prepared in revenue research).
                 Matches dark theme + card patterns already in this tab. Tasteful, transparent, reinforces the non-negotiable "core always free" promise. */}
-            <div className="pt-8 border-t border-[#2A3328]">
-              <div className="text-[10px] tracking-[2px] text-[#A3A8A0] mb-2">PARTNERS KEEPING IT FREE</div>
-              <div className="text-sm text-[#A3A8A0] mb-4 leading-snug">
+            <div className="pt-8 border-t border-[#E5E2D9]">
+              <div className="text-[10px] tracking-[2px] text-[#5C6666] mb-2">PARTNERS KEEPING IT FREE</div>
+              <div className="text-sm text-[#5C6666] mb-4 leading-snug">
                 CragTrails core — maps, routes, logbook, community beta — is and always will be 100% free. 
                 These climber-first brands help fund servers, moderation, and OpenBeta contributions so every new climber and family can send without paywalls.
               </div>
@@ -1002,13 +1009,13 @@ export default function ClimbTrailsLogbook() {
                     href={s.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 bg-[#161B17] border border-[#2A3328] hover:border-[#4ADE80] active:scale-[0.985] rounded-2xl px-4 py-3 transition-all text-sm"
+                    className="flex items-center gap-2.5 bg-white border border-[#E5E2D9] hover:border-[#166534] active:scale-[0.985] rounded-2xl px-4 py-3 transition-all text-sm"
                     title={s.blurb}
                   >
                     <span className="text-xl flex-shrink-0">{s.logo}</span>
                     <div className="min-w-0">
-                      <div className="font-semibold text-[#F5F5F3] truncate">{s.name}</div>
-                      <div className="text-[10px] text-[#A3A8A0] truncate">{s.tier}</div>
+                      <div className="font-semibold text-[#1F2525] truncate">{s.name}</div>
+                      <div className="text-[10px] text-[#5C6666] truncate">{s.tier}</div>
                     </div>
                   </a>
                 ))}
@@ -1049,13 +1056,13 @@ export default function ClimbTrailsLogbook() {
             <motion.div initial={{y:70,opacity:0}} animate={{y:0,opacity:1}} exit={{y:50,opacity:0}} className="send-modal w-full md:max-w-lg" onClick={e=>e.stopPropagation()}>
               <div className="modal-header flex justify-between">
                 <div>
-                  <div className="text-xs text-[#A3A8A0]">LOG THIS CLIMB FOR {currentProfile.name.toUpperCase()}</div>
+                  <div className="text-xs text-[#5C6666]">LOG THIS CLIMB FOR {currentProfile.name.toUpperCase()}</div>
                   <div className="text-2xl font-extrabold tracking-tight">{currentClimb.name}</div>
-                  <div className="text-sm text-[#A3A8A0]">{currentClimb.areaName} • {currentClimb.grade}</div>
+                  <div className="text-sm text-[#5C6666]">{currentClimb.areaName} • {currentClimb.grade}</div>
                   <div className="text-[10px] text-[#4ADE80] mt-0.5 font-medium tracking-tight">{getAttributionLine(currentClimb.sources)}</div>
                   {/* Show if this profile has already completed the route */}
                   {ticks.some(t => t.routeId === currentClimb.id) && (
-                    <div className="mt-1 inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-[#052E16] text-[#4ADE80] font-medium">✓ You’ve already logged this climb</div>
+                    <div className="mt-1 inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium">✓ You’ve already logged this climb</div>
                   )}
                 </div>
                 <button onClick={closeSendModal}><X/></button>
@@ -1063,22 +1070,22 @@ export default function ClimbTrailsLogbook() {
 
               <div className="p-5 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
-                  <div><div className="text-xs mb-1 text-[#A3A8A0]">DATE</div><input type="date" value={sendForm.date} onChange={e=>setSendForm({...sendForm,date:e.target.value})} className="w-full bg-[#0A0C0A] border border-[#2A3328] rounded-2xl px-4 py-2 text-sm"/></div>
-                  <div><div className="text-xs mb-1 text-[#A3A8A0]">STARS</div><div className="flex gap-1 text-4xl">{[1,2,3,4,5].map(s=><span key={s} onClick={()=>setSendForm({...sendForm,stars:s})} className={`cursor-pointer ${s<=sendForm.stars?'text-[#FBBF24]':'text-[#2A3328]'}`}>★</span>)}</div></div>
+                  <div><div className="text-xs mb-1 text-[#5C6666]">DATE</div><input type="date" value={sendForm.date} onChange={e=>setSendForm({...sendForm,date:e.target.value})} className="w-full bg-white border border-[#E5E2D9] rounded-2xl px-4 py-2 text-sm text-[#1F2525]"/></div>
+                  <div><div className="text-xs mb-1 text-[#5C6666]">STARS</div><div className="flex gap-1 text-4xl">{[1,2,3,4,5].map(s=><span key={s} onClick={()=>setSendForm({...sendForm,stars:s})} className={`cursor-pointer ${s<=sendForm.stars?'text-[#FBBF24]':'text-[#E5E2D9]'}`}>★</span>)}</div></div>
                 </div>
 
-                <div><div className="text-xs mb-2 text-[#A3A8A0]">CONDITIONS TAG</div><div className="flex flex-wrap gap-2">{CONDITION_TAGS.map(t=><button key={t} onClick={()=>setSendForm({...sendForm,conditionTag:t})} className={`condition-pill ${sendForm.conditionTag===t?'active':''}`}>{t}</button>)}</div></div>
+                <div><div className="text-xs mb-2 text-[#5C6666]">CONDITIONS TAG</div><div className="flex flex-wrap gap-2">{CONDITION_TAGS.map(t=><button key={t} onClick={()=>setSendForm({...sendForm,conditionTag:t})} className={`condition-pill ${sendForm.conditionTag===t?'active':''}`}>{t}</button>)}</div></div>
 
-                <div><div className="text-xs mb-1.5 text-[#A3A8A0]">BETA NOTES</div><textarea value={sendForm.betaNotes} onChange={e=>setSendForm({...sendForm,betaNotes:e.target.value})} placeholder="Right hand to the crimp, then dyno left..." className="w-full bg-[#0A0C0A] border border-[#2A3328] rounded-2xl p-4 text-sm" rows={2}/></div>
+                <div><div className="text-xs mb-1.5 text-[#5C6666]">BETA NOTES</div><textarea value={sendForm.betaNotes} onChange={e=>setSendForm({...sendForm,betaNotes:e.target.value})} placeholder="Right hand to the crimp, then dyno left..." className="w-full bg-white border border-[#E5E2D9] rounded-2xl p-4 text-sm text-[#1F2525]" rows={2}/></div>
 
-                <div><div className="text-xs mb-1.5 text-[#A3A8A0]">OPTIONAL PHOTO</div>{!sendForm.photoDataUrl ? <label className="photo-upload block cursor-pointer"><Camera className="mx-auto mb-1"/><div className="text-sm">Add a photo of the send</div><input type="file" accept="image/*" onChange={handlePhoto} className="hidden"/>{isUploadingPhoto&&<div>Compressing...</div>}</label> : <div className="relative"><img src={sendForm.photoDataUrl} loading="lazy" className="photo-preview"/><button onClick={()=>setSendForm({...sendForm,photoDataUrl:''})} className="absolute top-2 right-2 bg-black/70 rounded-full p-1"><X size={15}/></button></div>}</div>
+                <div><div className="text-xs mb-1.5 text-[#5C6666]">OPTIONAL PHOTO</div>{!sendForm.photoDataUrl ? <label className="photo-upload block cursor-pointer"><Camera className="mx-auto mb-1"/><div className="text-sm">Add a photo of the send</div><input type="file" accept="image/*" onChange={handlePhoto} className="hidden"/>{isUploadingPhoto&&<div>Compressing...</div>}</label> : <div className="relative"><img src={sendForm.photoDataUrl} loading="lazy" className="photo-preview"/><button onClick={()=>setSendForm({...sendForm,photoDataUrl:''})} className="absolute top-2 right-2 bg-black/70 rounded-full p-1"><X size={15}/></button></div>}</div>
               </div>
 
               <div className="p-5 pt-0">
                 <button onClick={submitSend} className="w-full h-16 text-xl font-extrabold rounded-3xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-[#0A0C0A] flex items-center justify-center gap-3">
                   LOG THIS CLIMB AS COMPLETED FOR ME
                 </button>
-                <div className="text-center text-[10px] text-[#A3A8A0] mt-2">This will be saved under {currentProfile.name} in your profile</div>
+                <div className="text-center text-[10px] text-[#5C6666] mt-2">This will be saved under {currentProfile.name} in your profile</div>
               </div>
             </motion.div>
           </div>

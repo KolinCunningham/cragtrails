@@ -370,7 +370,7 @@ body {
 /* Map container polish */
 .leaflet-container {
   border-radius: 20px !important;
-  background: #0a0a0a;
+  background: #F8F7F4;
 }
 
 /* Leaflet control polish */
@@ -776,7 +776,7 @@ h1, .text-hero {
 
 /* Top header / stats bar */
 .climb-header {
-  background: linear-gradient(180deg, #161B17 0%, #0A0C0A 100%);
+  background: #ffffff;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -912,7 +912,7 @@ h1, .text-hero {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #1C211D, #161B17);
+  background: #ffffff;
   padding: 18px 20px;
   border-bottom: 1px solid var(--border);
 }
@@ -1023,10 +1023,10 @@ h1, .text-hero {
   border-radius: 999px;
   display: inline-block;
 }
-.tag-pumped { background: #451A03; color: #FDBA74; }
-.tag-flashed { background: #14532D; color: #86EFAC; }
-.tag-dogged { background: #431407; color: #FDBA74; }
-.tag-wet { background: #1E3A8A; color: #93C5FD; }
+.tag-pumped { background: #FEF3C7; color: #92400E; }
+.tag-flashed { background: #DCFCE7; color: #166534; }
+.tag-dogged { background: #FFEDD5; color: #9A3412; }
+.tag-wet { background: #DBEAFE; color: #1E40AF; }
 
 /* Grade Pyramid — horizontal bars, interactive */
 .pyramid-container {
@@ -1084,8 +1084,8 @@ h1, .text-hero {
   border-radius: 16px;
 }
 .wishlist-card .send-mini {
-  background: #052E16;
-  color: var(--green);
+  background: #DCFCE7;
+  color: #166534;
 }
 
 /* Goal progress */
@@ -1097,7 +1097,7 @@ h1, .text-hero {
 }
 .progress-track {
   height: 10px;
-  background: #2A3328;
+  background: #E5E2D9;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1147,7 +1147,7 @@ h1, .text-hero {
 /* Toast custom for crusher moments (sonner) */
 .toaster-climb [data-sonner-toast] {
   border-radius: 16px;
-  border: 1px solid #2A3328;
+  border: 1px solid #E5E2D9;
 }
 
 /* Empty states */
@@ -1167,7 +1167,7 @@ h1, .text-hero {
 }
 
 .glass {
-  background: rgba(22, 27, 23, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
 }
 
@@ -1333,7 +1333,8 @@ button, .clickable {
    - Light theme consistency for header (override legacy dark gradient definitively on wide screens)
    - Better use of horizontal space for existing filter rows + header typography without any new UI elements, state, or mobile impact
    - Wider breathing in header nav and subtle content comfort
-   - Zero bloat: pure CSS enhancement to make desktop feel excellent while 10yo-friendly mobile remains pixel-perfect unchanged
+   - Taller map (lg:), richer hover tooltips in CragMap, spacious two-col Logbook (pyramid sidebar), premium typography/grids in Discover — all via responsive prefixes + media
+   - Zero bloat, zero new state/behavior: mobile (and <lg) 100% pixel-identical in render, flow, and tap targets. Enforces AGENTS.md + CONTRIBUTING.md at every step.
    ===================================================== */
 @media (min-width: 1024px) {
   /* Light theme priority: make .climb-header base clean light on desktop where new dual-headers live */
@@ -1360,5 +1361,28 @@ button, .clickable {
   /* Subtle wider layout comfort for the main content shell on very wide desktops (respects existing max-w-7xl and 10yo large text) */
   .climb-app {
     max-width: 1320px;
+  }
+
+  /* Map tab: larger map + premium spacing (lg:h in JSX + this for any fallback containers) */
+  .climb-app .h-\[520px\] {
+    height: 660px;
+  }
+
+  /* Logbook spacious premium two-col (sidebar pyramid) — generous air, sidebar-friendly padding */
+  .logbook-desktop-grid .pyramid-container {
+    margin-bottom: 0;
+    padding: 24px;
+  }
+  .logbook-desktop-grid .timeline {
+    padding-top: 4px;
+  }
+
+  /* Discover premium spaciousness on desktop: breathing room in grids + hero */
+  .climb-app .space-y-8 > * + * {
+    margin-top: 2.25rem;
+  }
+  .climb-app .grid.lg\\:grid-cols-3,
+  .climb-app .grid.lg\\:grid-cols-4 {
+    gap: 1rem;
   }
 }

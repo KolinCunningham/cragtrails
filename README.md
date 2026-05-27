@@ -65,26 +65,29 @@ This is not a static landing page. It is a working prototype of the core discove
 
 ---
 
-## v0.1 — Built in a 30-Minute Skeptical CEO Sprint (May 2026)
+## Current Status (Active Refinement Sprint)
 
-This project was created in one intense 30-minute session using 10+ specialized AI subagents orchestrated under a **Skeptical CEO** model:
+The project is in an active multi-agent refinement phase under Skeptical CEO oversight.
 
-- Every proposal was assumed to be wrong, bloated, or the wrong priority until the agent provided clear proof.
-- The CEO (lead) only approved changes that clearly served long-term simplicity for new climbers (including kids), real daily value for experienced climbers, trust & safety, and sustainable open governance.
+**Major recent progress:**
+- Full shift to clean **light theme** (Mountain Project / TheCrag inspired — warm off-whites, forest greens, excellent readability).
+- Proper **desktop website experience** (top navigation on large screens, wider layouts, better use of space) while keeping the excellent mobile 4-tab experience.
+- Canonical attributed data model fully wired (real OpenBeta-aligned data + visible source badges).
+- High-quality real climbing photos integrated across cards, modals, and logbook.
+- Clean 4-tab AllTrails-style navigation (Discover / Map / Logbook / Me).
+- Personalized recommendations (location-based "Near You" + history-based "Recommended for you").
+- Basic multi-profile demo system + real Clerk auth foundation (Apple/Google/Facebook/Email).
+- Minimal tasteful partners section in Me tab ("core always free").
 
-**What shipped in this sprint:**
-- Delightful hybrid map + list discovery
-- Extremely satisfying one-tap send flow with conditions, photos, and instant feedback
-- Rich personal logbook + interactive grade pyramid + community beta reports
-- Yearly send goals + wishlist that update live
-- Production-grade Admin/Trust console (photo moderation, data health, full audit log)
-- Proper hierarchical data model designed for OpenBeta + Mountain Project + TheCrag + user contributions (with mandatory source attribution)
-- Ironclad governance: Every future PR (human or AI) must answer the 4 Proof of Value questions or it gets rejected
+**Live Demo**
+→ **[https://cragtrails.vercel.app](https://cragtrails.vercel.app)**
 
-**Current philosophy:**
-We will ruthlessly protect the "simple enough for a 10-year-old" promise at the top level while delivering real power and joy for serious climbers inside the experience.
+The prototype is rapidly moving from phone-first dark app → premium light-themed website that works beautifully on both desktop and mobile.
 
-Core will always be free. Revenue (if any) will be minimal, transparent, and climber-first.
+**Governance**
+All work goes through the Skeptical CEO process. Only changes with strong Proof of Value (real climber problem, 10yo simplicity test, growth evidence, no simpler alternative) get merged.
+
+Core will always be free. We are deliberately building something special, not another bloated side project.
 
 ---
 
