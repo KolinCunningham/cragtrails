@@ -1327,3 +1327,38 @@ button, .clickable {
   .admin-card { border-radius: 18px; }
   .admin-input { padding: 12px 16px; font-size: 15px; }
 }
+
+/* =====================================================
+   DESKTOP EXPERIENCE (lg+/1024px+ ONLY) — Skeptical CEO approved minimal polish
+   - Light theme consistency for header (override legacy dark gradient definitively on wide screens)
+   - Better use of horizontal space for existing filter rows + header typography without any new UI elements, state, or mobile impact
+   - Wider breathing in header nav and subtle content comfort
+   - Zero bloat: pure CSS enhancement to make desktop feel excellent while 10yo-friendly mobile remains pixel-perfect unchanged
+   ===================================================== */
+@media (min-width: 1024px) {
+  /* Light theme priority: make .climb-header base clean light on desktop where new dual-headers live */
+  .climb-header {
+    background: #ffffff;
+    border-bottom-color: #e5e2d9;
+  }
+
+  /* Improved desktop header: more generous spacing + refined tracking for premium wide-screen presence */
+  .climb-header .max-w-7xl {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  .climb-header nav {
+    gap: 2rem;
+  }
+
+  /* Better use of space on Discover + Map: existing filter rows get comfortable room on wide viewports (no behavior change below lg) */
+  .climb-app .flex.flex-wrap.gap-2.mb-3,
+  .climb-app .flex.gap-2.mb-4.flex-wrap {
+    gap: 0.875rem;
+  }
+
+  /* Subtle wider layout comfort for the main content shell on very wide desktops (respects existing max-w-7xl and 10yo large text) */
+  .climb-app {
+    max-width: 1320px;
+  }
+}

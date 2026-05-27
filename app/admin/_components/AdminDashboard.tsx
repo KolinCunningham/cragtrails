@@ -56,12 +56,12 @@ type Tab = "dashboard" | "photos" | "routes" | "moderation" | "health";
 
 // ---------------- INITIAL MOCK DATA (Realistic climbing domain) ----------------
 const INITIAL_PHOTOS: PendingPhoto[] = [
-  { id: "p1", url: "https://picsum.photos/id/1011/800/600", user: { name: "Maya Chen", handle: "@mayasends" }, crag: "Red River Gorge", routeName: "Tequila Sunrise", caption: "First lead of the season! Felt solid on the crux.", uploadedAt: "2026-05-24T09:12:00Z" },
-  { id: "p2", url: "https://picsum.photos/id/1005/800/600", user: { name: "Jordan Hale", handle: "@jordanvert" }, crag: "Yosemite Valley", routeName: "Royal Arches", caption: "Golden hour on the Apron. The exposure is wild.", uploadedAt: "2026-05-24T11:45:00Z" },
-  { id: "p3", url: "https://picsum.photos/id/160/800/600", user: { name: "Sam Rivera", handle: "@samarock" }, crag: "Indian Creek", routeName: "Supercrack", caption: "Perfect splitter. Hands were cooked.", uploadedAt: "2026-05-23T18:03:00Z" },
-  { id: "p4", url: "https://picsum.photos/id/201/800/600", user: { name: "Lena Voss", handle: "@lenavoss" }, crag: "Smith Rock", routeName: "Aggro Gully", caption: "Hardest onsight this year. So pumped!", uploadedAt: "2026-05-23T14:22:00Z" },
-  { id: "p5", url: "https://picsum.photos/id/251/800/600", user: { name: "Kai Nakamura", handle: "@kaiclimbs" }, crag: "Joshua Tree", routeName: "Walk on the Wild Side", caption: "Classic JTree patina. Felt like a time capsule.", uploadedAt: "2026-05-22T20:55:00Z" },
-  { id: "p6", url: "https://picsum.photos/id/29/800/600", user: { name: "Riley Quinn", handle: "@rileytrad" }, crag: "Red River Gorge", routeName: "Midnight Lightning", caption: "Family day at the Motherlode. Kids were stoked.", uploadedAt: "2026-05-22T16:10:00Z" },
+  { id: "p1", url: "https://source.unsplash.com/Ec9YU6ATKmg/800/600", user: { name: "Maya Chen", handle: "@mayasends" }, crag: "Red River Gorge", routeName: "Tequila Sunrise", caption: "First lead of the season! Felt solid on the crux.", uploadedAt: "2026-05-24T09:12:00Z" },
+  { id: "p2", url: "https://source.unsplash.com/plWDssUkimQ/800/600", user: { name: "Jordan Hale", handle: "@jordanvert" }, crag: "Yosemite Valley", routeName: "Royal Arches", caption: "Golden hour on the Apron. The exposure is wild.", uploadedAt: "2026-05-24T11:45:00Z" },
+  { id: "p3", url: "https://source.unsplash.com/oS5O3gVMnpA/800/600", user: { name: "Sam Rivera", handle: "@samarock" }, crag: "Indian Creek", routeName: "Supercrack", caption: "Perfect splitter. Hands were cooked.", uploadedAt: "2026-05-23T18:03:00Z" },
+  { id: "p4", url: "https://source.unsplash.com/VnmbcgAfL3Q/800/600", user: { name: "Lena Voss", handle: "@lenavoss" }, crag: "Smith Rock", routeName: "Aggro Gully", caption: "Hardest onsight this year. So pumped!", uploadedAt: "2026-05-23T14:22:00Z" },
+  { id: "p5", url: "https://source.unsplash.com/pwb9NTr7vOE/800/600", user: { name: "Kai Nakamura", handle: "@kaiclimbs" }, crag: "Joshua Tree", routeName: "Walk on the Wild Side", caption: "Classic JTree patina. Felt like a time capsule.", uploadedAt: "2026-05-22T20:55:00Z" },
+  { id: "p6", url: "https://source.unsplash.com/DmXTuoL17Ao/800/600", user: { name: "Riley Quinn", handle: "@rileytrad" }, crag: "Red River Gorge", routeName: "Midnight Lightning", caption: "Family day at the Motherlode. Kids were stoked.", uploadedAt: "2026-05-22T16:10:00Z" },
 ];
 
 const INITIAL_ROUTES: Route[] = [
@@ -456,7 +456,7 @@ export default function AdminDashboard() {
               {filteredPhotos.map((photo) => (
                 <div key={photo.id} className="photo-card group">
                   <div className="photo-thumb">
-                    <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
+                    <img src={photo.url} alt={photo.caption} loading="lazy" className="w-full h-full object-cover" />
                     <div className="absolute top-3 right-3">
                       <div className="status-badge badge-pending">PENDING REVIEW</div>
                     </div>
