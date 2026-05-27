@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner';
 import type { Route as LegacyRoute, Tick, ConditionReport } from '@/lib/types';
 import { seedData, formatAttribution, getSourceBadge, getAttributionLine, getGradeColor } from '@/lib/data/index';
+import { db as dynamoDb } from '@/lib/db/dynamodb';
 import type { Route as CanonicalRoute, ConditionReport as CanonicalConditionReport, SourceAttribution } from '@/lib/types/climbing';
 import { SPONSORS } from '@/lib/seed-data';
 import dynamic from 'next/dynamic';
@@ -166,6 +167,9 @@ const DEMO_PROFILES = [
 // so it can access real user ticks from state (persisted logged sends).
 
 export default function ClimbTrailsLogbook() {
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const isRealUser = isUserLoaded && !!user;
+
   const [ticks, setTicks] = useState<Tick[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [conditionReports, setConditionReports] = useState<ConditionReport[]>(SAMPLE_REPORTS);
@@ -192,6 +196,9 @@ export default function ClimbTrailsLogbook() {
   const [currentProfileId, setCurrentProfileId] = useState<'p_alex' | 'p_sam' | 'p_jordan'>('p_alex');
   const currentProfile = DEMO_PROFILES.find(p => p.id === currentProfileId)!;
   const getProfileKey = (pid: string, key: string) => `ct_${pid}_${key}`;
+
+  // Real user persistence mode (when signed in via Clerk + DynamoDB available)
+  const useRealPersistence = isRealUser && dynamoDb.isEnabled;
 
   // User location for "Near You" personalized suggestions
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -316,10 +323,60 @@ export default function ClimbTrailsLogbook() {
   useEffect(() => { localStorage.setItem('ct_reports', JSON.stringify(conditionReports)); }, [conditionReports]);
   useEffect(() => { localStorage.setItem(getProfileKey(currentProfileId, 'goals'), JSON.stringify(userGoals)); }, [userGoals, currentProfileId]);
 
+  // Real persistence saves to DynamoDB (iterative - runs alongside localStorage for now)
+  useEffect(() => {
+    if (!useRealPersistence || !user || ticks.length === 0) return;
+    // Only save new ticks that aren't already in DB (simple approach for now)
+    const saveRecentTicks = async () => {
+      try {
+        // For simplicity in first iteration, we save the latest tick when it changes
+        const latestTick = ticks[0];
+        if (latestTick) {
+          await dynamoDb.saveTick({ ...latestTick, userId: user.id });
+        }
+      } catch (err) {
+        console.error('Failed to save tick to DynamoDB', err);
+      }
+    };
+    saveRecentTicks();
+  }, [ticks, useRealPersistence, user?.id]);
+
+  useEffect(() => {
+    if (!useRealPersistence || !user) return;
+    dynamoDb.saveUserData(user.id, { wishlist, goals: userGoals }).catch(console.error);
+  }, [wishlist, userGoals, useRealPersistence, user?.id]);
+
   // Persist chosen profile id (so refresh keeps you "signed in" as that climber)
   useEffect(() => {
     localStorage.setItem('ct_current_profile', currentProfileId);
   }, [currentProfileId]);
+
+  // Load real user data from DynamoDB when signed in (iterative rollout)
+  useEffect(() => {
+    if (!useRealPersistence || !user) return;
+
+    const loadRealData = async () => {
+      try {
+        const [userTicks, userData] = await Promise.all([
+          dynamoDb.getTicksForUser(user.id),
+          dynamoDb.getUserData(user.id),
+        ]);
+
+        if (userTicks.length > 0) {
+          setTicks(userTicks);
+        }
+        if (userData) {
+          if (userData.wishlist?.length) setWishlist(userData.wishlist);
+          if (userData.goals?.length) setUserGoals(userData.goals);
+        }
+      } catch (err) {
+        console.error('Failed to load from DynamoDB, falling back to localStorage', err);
+        // Fallback already handled by existing localStorage logic above
+      }
+    };
+
+    loadRealData();
+  }, [useRealPersistence, user?.id]);
 
   const userStats = useMemo(() => {
     const total = ticks.length;
