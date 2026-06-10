@@ -277,7 +277,8 @@ export default function ClimbTrailsLogbook() {
   // Get nearby routes based on user location (top 6 within 100 miles)
   const nearbyRoutes = useMemo(() => {
     if (!userLocation) return [];
-    return [...ROUTES]
+    return ROUTES
+      .filter(r => r.description && r.description.trim().length > 0)
       .map(route => ({
         ...route,
         distance: getDistanceMiles(userLocation.lat, userLocation.lng, route.lat, route.lng)
@@ -289,18 +290,18 @@ export default function ClimbTrailsLogbook() {
 
   // Personalized recommendations based on the current user's past sends (history-based)
   const personalRecommendations = useMemo(() => {
+    const BETA_ROUTES = ROUTES.filter(r => r.description && r.description.trim().length > 0);
+
     if (ticks.length === 0) {
-      // Cold start: show popular routes
-      return [...ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
+      return [...BETA_ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
     }
 
     const userGrades = ticks.map(t => t.grade);
     const userAreas = ticks.map(t => t.areaName);
-    const userStyles = ticks.map(t => 'Sport'); // Simplified for demo; can be enhanced later
+    const userStyles = ticks.map(t => 'Sport');
 
-    // Score routes based on similarity to what the user has done
-    const scored = ROUTES
-      .filter(r => !ticks.some(tick => tick.routeId === r.id)) // Don't recommend what they've already done
+    const scored = BETA_ROUTES
+      .filter(r => !ticks.some(tick => tick.routeId === r.id))
       .map(route => {
         let score = 0;
 
@@ -324,7 +325,7 @@ export default function ClimbTrailsLogbook() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
 
-    return scored.length > 0 ? scored : [...ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
+    return scored.length > 0 ? scored : [...BETA_ROUTES].sort((a, b) => (b.ticks || 0) - (a.ticks || 0)).slice(0, 6);
   }, [ticks]);
 
   useEffect(() => {
@@ -455,7 +456,7 @@ export default function ClimbTrailsLogbook() {
   const maxPy = Math.max(1, ...pyramidData.map(p=>p.count));
 
   const discoverClimbs = useMemo(() => {
-    let res = [...ROUTES];
+    let res = ROUTES.filter(r => r.description && r.description.trim().length > 0);
     if (discoverSearch) { const q=discoverSearch.toLowerCase(); res = res.filter(r => r.name.toLowerCase().includes(q)||r.areaName.toLowerCase().includes(q)||r.grade.toLowerCase().includes(q)); }
     if (discoverType!=='All') res = res.filter(r => r.type === discoverType);
     return res;
