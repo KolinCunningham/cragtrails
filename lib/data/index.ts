@@ -1,9 +1,11 @@
 export * from './seed-data';
 export { mpAreas, mpRoutes, getMpRoutePhotoUrl } from './mp-seed-data';
+export { sydneyAreas, sydneyRoutes, sydneyPhotos, getSydneyRoutePhotoUrl } from './sydney-routes-seed';
 
 import type { Route as CanonicalRoute, Area, Photo, SourceAttribution } from '../types/climbing';
 import { seedData as _baseSeedData, areas as _baseAreas, routes as _baseRoutes } from './seed-data';
 import { mpAreas, mpRoutes, getMpRoutePhotoUrl } from './mp-seed-data';
+import { sydneyAreas, sydneyRoutes, sydneyPhotos } from './sydney-routes-seed';
 import { makeAttribution } from '../types/climbing';
 
 const IMPORT_TS = '2026-06-10T00:00:00Z';
@@ -33,19 +35,26 @@ const _mpPhotoStubs: Photo[] = mpRoutes
     },
   }));
 
+// Deduplicate Sydney data (guard against any future re-imports)
+const _sydneyAreaIds = new Set(sydneyAreas.map((a: Area) => a.id));
+const _sydneyRouteIds = new Set(sydneyRoutes.map((r: CanonicalRoute) => r.id));
+
 export const seedData = {
   ..._baseSeedData,
   areas: [
     ..._baseAreas,
     ...mpAreas.filter((a: Area) => !_basAreaIds.has(a.id)),
+    ...sydneyAreas.filter((a: Area) => !_basAreaIds.has(a.id)),
   ],
   routes: [
     ..._baseRoutes,
     ...mpRoutes.filter((r: CanonicalRoute) => !_baseRouteIds.has(r.id)),
+    ...sydneyRoutes.filter((r: CanonicalRoute) => !_baseRouteIds.has(r.id)),
   ],
   photos: [
     ..._baseSeedData.photos,
     ..._mpPhotoStubs,
+    ...sydneyPhotos,
   ],
 } as const;
 
