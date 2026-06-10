@@ -1,6 +1,53 @@
 export * from './seed-data';
+export { mpAreas, mpRoutes, getMpRoutePhotoUrl } from './mp-seed-data';
 
-import type { Route as CanonicalRoute, SourceAttribution } from '../types/climbing';
+import type { Route as CanonicalRoute, Area, Photo, SourceAttribution } from '../types/climbing';
+import { seedData as _baseSeedData, areas as _baseAreas, routes as _baseRoutes } from './seed-data';
+import { mpAreas, mpRoutes, getMpRoutePhotoUrl } from './mp-seed-data';
+import { makeAttribution } from '../types/climbing';
+
+const IMPORT_TS = '2026-06-10T00:00:00Z';
+
+/**
+ * Merged seedData — base curated data + Mountain Project top-50 import.
+ * Exported as `seedData` (same shape as before) so existing consumers work unchanged.
+ * MP areas + routes are appended; base data takes priority for any ID collisions.
+ * Photo stubs are generated for MP routes using style-matched Unsplash images.
+ */
+const _basAreaIds = new Set(_baseAreas.map((a: Area) => a.id));
+const _baseRouteIds = new Set(_baseRoutes.map((r: CanonicalRoute) => r.id));
+
+// Generate style-matched photo stubs for MP routes (no photo IDs in scrape)
+const _mpPhotoStubs: Photo[] = mpRoutes
+  .filter((r: CanonicalRoute) => !_baseRouteIds.has(r.id))
+  .map((r: CanonicalRoute) => ({
+    id: `photo_${r.id}`,
+    routeId: r.id,
+    url: getMpRoutePhotoUrl(r.styles as string[]),
+    thumbnailUrl: getMpRoutePhotoUrl(r.styles as string[]),
+    caption: `${r.name} — ${r.grades.primary}`,
+    license: 'Unsplash',
+    metadata: {
+      sources: [makeAttribution('mountainproject', r.id, undefined,
+        'Historical Mountain Project community data (pre-2021)')],
+    },
+  }));
+
+export const seedData = {
+  ..._baseSeedData,
+  areas: [
+    ..._baseAreas,
+    ...mpAreas.filter((a: Area) => !_basAreaIds.has(a.id)),
+  ],
+  routes: [
+    ..._baseRoutes,
+    ...mpRoutes.filter((r: CanonicalRoute) => !_baseRouteIds.has(r.id)),
+  ],
+  photos: [
+    ..._baseSeedData.photos,
+    ..._mpPhotoStubs,
+  ],
+} as const;
 
 /**
  * CLEAN ADAPTER LAYER — Data Integration
