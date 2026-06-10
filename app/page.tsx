@@ -85,7 +85,7 @@ function mapToAppRoute(r: CanonicalRoute): LegacyRoute {
     ticks: tickCountByRouteId.get(r.id) || 42, // real data from seed
     difficultyColor: (r.quality > 4.5 ? 'red' : r.quality > 4.0 ? 'orange' : 'yellow') as any,
     description: r.description || '',
-    photoUrl: routePhotos[0] || 'https://source.unsplash.com/2d39VFZYGaA/800/600',
+    photoUrl: routePhotos[0] || `https://picsum.photos/seed/${r.id}/800/600`,
     photoUrls: routePhotos.length ? routePhotos : [],
     fa: r.fa || 'Unknown',
     bestConditions: r.bestSeason?.join(', ') || '',
@@ -98,8 +98,23 @@ function mapToAppRoute(r: CanonicalRoute): LegacyRoute {
   };
 }
 
+// Unsplash source.unsplash.com shortlinks are deprecated — replace with reliable picsum per-route
+function fixPhotoUrl(url: string, routeId: string): string {
+  if (!url || url.includes('source.unsplash.com')) {
+    return `https://picsum.photos/seed/${routeId}/800/600`;
+  }
+  return url;
+}
+
 // THE REPLACEMENT: canonical-powered routes (no more legacy ROUTES variable or mindset)
-const ROUTES: LegacyRoute[] = CANONICAL_ROUTES.map(mapToAppRoute);
+const ROUTES: LegacyRoute[] = CANONICAL_ROUTES.map(r => {
+  const route = mapToAppRoute(r);
+  return {
+    ...route,
+    photoUrl: fixPhotoUrl(route.photoUrl, r.id),
+    photoUrls: route.photoUrls.map(u => fixPhotoUrl(u, r.id)),
+  };
+});
 
 const CONDITION_TAGS = ["Pumped", "Flashed", "Dogged", "Wet"] as const;
 type ConditionTag = typeof CONDITION_TAGS[number];
@@ -908,10 +923,18 @@ export default function ClimbTrailsLogbook() {
                 <div className="text-sm text-[#5C6666] mb-3">Climbs within ~100 miles of your location</div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {nearbyRoutes.map(c => (
-                    <div key={c.id} className="rec-card">
-                      <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
-                      <div className="text-xs text-[#5C6666] mt-0.5">{c.distance.toFixed(0)} miles away</div>
-                      <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                    <div key={c.id} className="climb-card cursor-pointer" onClick={() => openDetailModal(c)}>
+                      <div className="climb-card-photo relative overflow-hidden">
+                        <img src={c.photoUrl} alt={c.name} loading="lazy" className="w-full h-full object-cover" />
+                        <span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span>
+                        <span className="absolute top-3 right-3 bg-black/60 text-white text-xs rounded-full px-2 py-0.5">{(c as any).distance?.toFixed(0)} mi</span>
+                      </div>
+                      <div className="p-3">
+                        <div className="font-bold">{c.name}</div>
+                        <div className="text-xs text-[#5C6666]">{c.areaName}</div>
+                        {c.description && <p className="text-xs text-[#5C6666] mt-1 line-clamp-2">{c.description}</p>}
+                        <button onClick={e=>{e.stopPropagation();openSendModal(c)}} className="mt-2 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -933,9 +956,17 @@ export default function ClimbTrailsLogbook() {
               <div className="text-sm text-[#5C6666] mb-3">Based on climbs you've already logged</div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {personalRecommendations.map(c => (
-                  <div key={c.id} className="rec-card">
-                    <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
-                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                  <div key={c.id} className="climb-card cursor-pointer" onClick={() => openDetailModal(c)}>
+                    <div className="climb-card-photo relative overflow-hidden">
+                      <img src={c.photoUrl} alt={c.name} loading="lazy" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span>
+                    </div>
+                    <div className="p-3">
+                      <div className="font-bold">{c.name}</div>
+                      <div className="text-xs text-[#5C6666]">{c.areaName}</div>
+                      {c.description && <p className="text-xs text-[#5C6666] mt-1 line-clamp-2">{c.description}</p>}
+                      <button onClick={e=>{e.stopPropagation();openSendModal(c)}} className="mt-2 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -945,9 +976,17 @@ export default function ClimbTrailsLogbook() {
               <div className="font-bold text-xl mb-3 flex items-center gap-2"><Users /> Climbers who sent your routes also loved…</div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {recommendations.map(c => (
-                  <div key={c.id} className="rec-card">
-                    <div className="font-bold">{c.name} <span className="font-normal text-[#5C6666]">({c.grade})</span></div>
-                    <button onClick={() => openSendModal(c)} className="mt-3 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                  <div key={c.id} className="climb-card cursor-pointer" onClick={() => openDetailModal(c)}>
+                    <div className="climb-card-photo relative overflow-hidden">
+                      <img src={c.photoUrl} alt={c.name} loading="lazy" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span>
+                    </div>
+                    <div className="p-3">
+                      <div className="font-bold">{c.name}</div>
+                      <div className="text-xs text-[#5C6666]">{c.areaName}</div>
+                      {c.description && <p className="text-xs text-[#5C6666] mt-1 line-clamp-2">{c.description}</p>}
+                      <button onClick={e=>{e.stopPropagation();openSendModal(c)}} className="mt-2 w-full py-2 rounded-2xl bg-[#DCFCE7] text-[#166534] font-extrabold text-sm">SEND IT NOW</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1011,7 +1050,10 @@ export default function ClimbTrailsLogbook() {
                       <div className="p-4">
                         <div className="font-bold text-xl">{c.name}</div>
                         <div className="text-sm text-[#5C6666]">{c.areaName}</div>
-                        <div className="mt-1"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div>
+                        {c.description && (
+                          <p className="text-xs text-[#5C6666] mt-1.5 line-clamp-2 leading-relaxed">{c.description}</p>
+                        )}
+                        <div className="mt-1.5"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div>
                         <div className="mt-3 flex gap-2">
                           <button onClick={e=>{e.stopPropagation();openSendModal(c)}} className="send-it-mini flex-1 justify-center">SEND IT</button>
                           <button onClick={e=>{e.stopPropagation();toggleWishlist(c.id)}} className="px-4 text-sm border border-[#E5E2D9] rounded-3xl font-semibold">{wish?'Wishlisted':'Wishlist'}</button>
