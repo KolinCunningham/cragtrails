@@ -92,7 +92,9 @@ function mapToAppRoute(r: CanonicalRoute): LegacyRoute {
     sources: r.metadata?.sources?.map((s: SourceAttribution) => s.provider) || ['community'],
     lastUpdated: r.metadata?.lastUpdated || new Date().toISOString(),
     lengthFt: r.lengthMeters ? Math.round(r.lengthMeters * 3.28) : undefined,
+    pitches: r.pitches,
     protection: r.protection,
+    hazards: r.hazards?.join(', ') || undefined,
   };
 }
 
@@ -1371,6 +1373,27 @@ export default function ClimbTrailsLogbook() {
                 </div>
                 <button onClick={closeSendModal}><X/></button>
               </div>
+
+              {/* Read-only route beta: description + gear + FA */}
+              {(currentClimb.description || currentClimb.protection || currentClimb.fa) && (
+                <div className="mx-5 mb-0 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] p-4 space-y-2">
+                  <div className="text-[10px] font-bold tracking-widest text-[#166534] uppercase">Route Beta</div>
+                  {currentClimb.description && (
+                    <p className="text-sm text-[#374151] leading-relaxed line-clamp-4">{currentClimb.description}</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    {currentClimb.protection && (
+                      <span className="text-xs text-[#166534] bg-[#DCFCE7] rounded-full px-2.5 py-1 font-medium">🛡 {currentClimb.protection}</span>
+                    )}
+                    {currentClimb.fa && currentClimb.fa !== 'Unknown' && (
+                      <span className="text-xs text-[#166534] bg-[#DCFCE7] rounded-full px-2.5 py-1 font-medium">⛰ FA: {currentClimb.fa}</span>
+                    )}
+                    {currentClimb.hazards && (
+                      <span className="text-xs text-[#DC2626] bg-[#FEE2E2] rounded-full px-2.5 py-1 font-medium">⚠️ {currentClimb.hazards}</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="p-5 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
