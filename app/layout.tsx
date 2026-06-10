@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ClerkProvider } from '@clerk/nextjs';
+import { AchievementToastManager } from './components/AchievementToast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,7 +102,26 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col font-sans bg-white text-[#1F2525]">
           {children}
-          <Toaster 
+
+          {/* Bottom banner ad — fixed above mobile nav, 320×50 / responsive */}
+          <div
+            className="ad-banner-bottom fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-[80] lg:bottom-0 flex items-center justify-center pointer-events-none"
+          >
+            <div
+              className="pointer-events-auto w-full max-w-[728px] mx-auto h-[50px] bg-[#F0F0F0] border-t border-b border-[#E0E0E0] flex items-center justify-center gap-3 px-4"
+              aria-label="Advertisement"
+            >
+              <span className="text-[10px] tracking-[2px] text-[#999] uppercase flex-shrink-0">Advertisement</span>
+              <span className="text-sm text-[#555] font-medium">
+                ⛰️ Support CragTrails — keep climbing free for everyone
+              </span>
+            </div>
+          </div>
+
+          {/* Achievement Toast Manager */}
+          <AchievementToastManager />
+
+          <Toaster
             position="top-center" 
             richColors 
             closeButton 

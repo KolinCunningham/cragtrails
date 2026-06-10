@@ -289,9 +289,17 @@ export default function RouteDetailModal({
               {/* Photo carousel */}
               <PhotoCarousel photos={allPhotos} routeName={route.name} />
 
-              {/* Ad slot — between photos and beta */}
-              <div className="w-full h-[60px] bg-[#F3F4F6] rounded-xl flex items-center justify-center border border-[#E5E7EB]">
-                <span className="text-xs text-[#9CA3AF] font-medium">Sponsored · Climbing gear</span>
+              {/* Ad slot: 300×100, after description, before log ascent — labeled Sponsored by [Brand] */}
+              <div
+                className="ad-route-modal w-full rounded-xl bg-[#F8F7F4] border border-[#E5E2D9] flex items-center gap-3 px-4 py-3"
+                style={{ minHeight: '64px' }}
+                aria-label="Advertisement"
+              >
+                <div className="text-2xl">🎒</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] tracking-[1.5px] text-[#9CA3AF] uppercase">Sponsored by Black Diamond</div>
+                  <div className="font-semibold text-sm text-[#374151] truncate">Gear up for your next project</div>
+                </div>
               </div>
 
               {/* Beta section */}

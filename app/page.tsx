@@ -14,6 +14,11 @@ import { SPONSORS } from '@/lib/seed-data';
 import dynamic from 'next/dynamic';
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import { loadPersonalData, persistTick, persistUserProfile } from './actions/persistence';
+import { getLevelForXP, getXPProgress, ACHIEVEMENTS } from '@/lib/data/achievements';
+import { shouldShowAd } from '@/lib/ads';
+import Link from 'next/link';
+
+const RouteDetailModal = dynamic(() => import('./components/RouteDetailModal'), { ssr: false });
 
 const CragMap = dynamic(() => import('./components/CragMap'), {
   ssr: false,
@@ -163,6 +168,11 @@ const DEMO_PROFILES = [
   { id: 'p_jordan', name: 'Jordan Lee', subtitle: 'Trad dad • Family sends' },
 ] as const;
 
+// Recent demo achievement IDs to show in the Me tab badge strip
+const DEMO_UNLOCKED_IDS = [
+  'first_route', 'first_boulder', 'volume_10', 'grade_v0', 'grade_59',
+] as const;
+
 // generateShareCard is now a properly-scoped helper defined inside the component
 // so it can access real user ticks from state (persisted logged sends).
 
@@ -178,6 +188,9 @@ export default function ClimbTrailsLogbook() {
     { id:'g2', label:'Log 25 total sends in 2026', target:25, current:0 },
   ]);
   const [activeTab, setActiveTab] = useState<'discover' | 'map' | 'logbook' | 'me'>('discover');
+
+  const [isRouteDetailOpen, setIsRouteDetailOpen] = useState(false);
+  const [selectedClimbForDetail, setSelectedClimbForDetail] = useState<LegacyRoute | null>(null);
 
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [selectedClimbForSend, setSelectedClimbForSend] = useState<LegacyRoute | null>(null);
@@ -495,6 +508,9 @@ export default function ClimbTrailsLogbook() {
       };
     });
   }, [mapSearch, mapGradeFilter, areaCoords]);
+
+  const openDetailModal = (climb: LegacyRoute) => { setSelectedClimbForDetail(climb); setIsRouteDetailOpen(true); };
+  const closeDetailModal = () => { setIsRouteDetailOpen(false); setSelectedClimbForDetail(null); };
 
   // === THE CORE: ONE-TAP SEND IT (satisfying, auto-updates everything) ===
   const openSendModal = (climb?: LegacyRoute) => {
@@ -945,10 +961,63 @@ export default function ClimbTrailsLogbook() {
                 {['All','Boulder','Sport','Trad'].map(t=><button key={t} onClick={()=>setDiscoverType(t as any)} className={`filter-chip ${discoverType===t?'active':''}`}>{t}</button>)}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {discoverClimbs.map(c => {
+                {discoverClimbs.reduce<React.ReactNode[]>((acc, c, idx) => {
                   const wish = wishlist.includes(c.id);
-                  return <div key={c.id} className="climb-card"><div className="climb-card-photo" style={{backgroundImage:`url(${c.photoUrl})`}}><button onClick={()=>toggleWishlist(c.id)} className="absolute top-3 right-3 p-2 bg-black/60 rounded-full"><Heart size={17} fill={wish?'#FBBF24':'none'}/></button><span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span></div><div className="p-4"><div className="font-bold text-xl">{c.name}</div><div className="text-sm text-[#5C6666]">{c.areaName}</div><div className="mt-1"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div><div className="mt-3 flex gap-2"><button onClick={()=>openSendModal(c)} className="send-it-mini flex-1 justify-center">SEND IT</button><button onClick={()=>toggleWishlist(c.id)} className="px-4 text-sm border border-[#E5E2D9] rounded-3xl font-semibold">{wish?'Wishlisted':'Wishlist'}</button></div></div></div>;
-                })}
+                  // Insert a sponsored ad card every 8th route card (after index 7, 15, 23...)
+                  if (shouldShowAd(idx)) {
+                    acc.push(
+                      <div
+                        key={`ad_${idx}`}
+                        className="climb-card flex flex-col justify-between"
+                        aria-label="Sponsored content"
+                      >
+                        <div className="climb-card-photo bg-[#F0F4F0] flex items-center justify-center" style={{backgroundImage:'none'}}>
+                          <div className="text-center p-4">
+                            <div className="text-2xl mb-2">🧰</div>
+                            <div className="font-bold text-[#1F2525] text-base">Black Diamond Gear</div>
+                            <div className="text-xs text-[#5C6666] mt-1">Protect every pitch with confidence</div>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <div className="text-[10px] tracking-[2px] text-[#5C6666] uppercase mb-1">Sponsored</div>
+                          <div className="text-sm font-semibold text-[#1F2525]">Shop Cams &amp; Nuts</div>
+                          <div className="text-xs text-[#5C6666] mt-0.5">Quality gear for trad climbers</div>
+                          <a
+                            href="#"
+                            className="mt-3 block w-full py-2 rounded-2xl bg-[#F0F4F0] border border-[#E5E2D9] text-center text-[#166534] font-semibold text-sm"
+                            onClick={e => e.preventDefault()}
+                          >
+                            Learn More
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                  acc.push(
+                    <div key={c.id} className="climb-card cursor-pointer" onClick={() => openDetailModal(c)}>
+                      <div className="climb-card-photo relative overflow-hidden">
+                        <img
+                          src={c.photoUrl}
+                          alt={c.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                        <button onClick={e=>{e.stopPropagation();toggleWishlist(c.id)}} className="absolute top-3 right-3 p-2 bg-black/60 rounded-full"><Heart size={17} fill={wish?'#FBBF24':'none'}/></button>
+                        <span className="absolute bottom-3 left-3 grade-badge" style={{background:getGradeColor(c.grade)}}>{c.grade}</span>
+                      </div>
+                      <div className="p-4">
+                        <div className="font-bold text-xl">{c.name}</div>
+                        <div className="text-sm text-[#5C6666]">{c.areaName}</div>
+                        <div className="mt-1"><span className="text-[10px] px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-medium tracking-tight inline-block">{getSourceBadge(c.sources)}</span></div>
+                        <div className="mt-3 flex gap-2">
+                          <button onClick={e=>{e.stopPropagation();openSendModal(c)}} className="send-it-mini flex-1 justify-center">SEND IT</button>
+                          <button onClick={e=>{e.stopPropagation();toggleWishlist(c.id)}} className="px-4 text-sm border border-[#E5E2D9] rounded-3xl font-semibold">{wish?'Wishlisted':'Wishlist'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                  return acc;
+                }, [])}
               </div>
             </div>
           </div>
@@ -1024,6 +1093,72 @@ export default function ClimbTrailsLogbook() {
               <div className="text-3xl font-bold">{effectiveName}</div>
               <div className="text-[#5C6666]">{effectiveSubtitle}</div>
             </div>
+
+            {/* XP Level Progress Bar */}
+            {(() => {
+              const xp = ticks.length * 50 + userStats.uniqueAreas * 100;
+              const { level, progressPercent, xpIntoLevel, xpNeeded } = getXPProgress(xp);
+              const isMax = level.level === 30;
+              return (
+                <div className="bg-white border border-[#E5E2D9] rounded-3xl p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">{level.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] tracking-[2px] text-[#5C6666]">LEVEL {level.level}</div>
+                      <div className="font-extrabold text-xl leading-tight">{level.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-[#166534] text-lg">{xp.toLocaleString()}</div>
+                      <div className="text-[10px] text-[#5C6666]">total XP</div>
+                    </div>
+                  </div>
+                  {!isMax && (
+                    <div>
+                      <div className="flex justify-between text-[11px] text-[#5C6666] mb-1">
+                        <span>{xpIntoLevel} XP into level</span>
+                        <span>{xpNeeded} XP to next</span>
+                      </div>
+                      <div className="h-3 bg-[#E5E2D9] rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-3 rounded-full bg-gradient-to-r from-[#22C55E] to-[#166534]"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progressPercent}%` }}
+                          transition={{ duration: 1, ease: 'easeOut' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="text-sm text-[#5C6666]">
+                      <span className="font-bold text-[#166534]">{DEMO_UNLOCKED_IDS.length}</span> achievements unlocked
+                    </div>
+                    <Link
+                      href="/achievements"
+                      className="text-sm text-[#166534] font-semibold active:opacity-70"
+                    >
+                      View all →
+                    </Link>
+                  </div>
+                  {/* Last 3 recent achievement badges */}
+                  <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+                    {DEMO_UNLOCKED_IDS.slice(0, 3).map((id) => {
+                      const ach = ACHIEVEMENTS.find(a => a.id === id);
+                      if (!ach) return null;
+                      return (
+                        <div
+                          key={ach.id}
+                          title={ach.name}
+                          className="flex-shrink-0 flex items-center gap-1.5 bg-[#F8F7F4] border border-[#E5E2D9] rounded-2xl px-3 py-1.5 text-xs font-semibold"
+                        >
+                          <span>{ach.emoji}</span>
+                          <span className="text-[#1F2525]">{ach.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="bg-white border border-[#E5E2D9] rounded-2xl p-5">
@@ -1209,6 +1344,16 @@ export default function ClimbTrailsLogbook() {
 
       <button onClick={()=>openSendModal()} className="fixed bottom-20 right-6 md:hidden z-[95] h-16 w-16 rounded-full bg-[#22C55E] text-[#0A0C0A] flex items-center justify-center shadow-2xl"><Send size={28}/></button>
 
+      <RouteDetailModal
+        route={selectedClimbForDetail}
+        isOpen={isRouteDetailOpen}
+        onClose={closeDetailModal}
+        onSend={(r) => openSendModal(r)}
+        onWishlist={(id) => toggleWishlist(id)}
+        isWishlisted={selectedClimbForDetail ? wishlist.includes(selectedClimbForDetail.id) : false}
+        conditionReports={conditionReports.map(r => ({ id: r.id, text: r.text, emoji: r.emoji, date: r.date, user: r.user, photoUrl: r.photoUrl, routeId: r.routeId } as any))}
+      />
+
       <AnimatePresence>
         {isSendModalOpen && currentClimb && (
           <div className="fixed inset-0 z-[95] bg-black/80 flex items-end md:items-center justify-center p-0 md:p-6" onClick={closeSendModal}>
@@ -1238,6 +1383,21 @@ export default function ClimbTrailsLogbook() {
                 <div><div className="text-xs mb-1.5 text-[#5C6666]">BETA NOTES</div><textarea value={sendForm.betaNotes} onChange={e=>setSendForm({...sendForm,betaNotes:e.target.value})} placeholder="Right hand to the crimp, then dyno left..." className="w-full bg-white border border-[#E5E2D9] rounded-2xl p-4 text-sm text-[#1F2525]" rows={2}/></div>
 
                 <div><div className="text-xs mb-1.5 text-[#5C6666]">OPTIONAL PHOTO</div>{!sendForm.photoDataUrl ? <label className="photo-upload block cursor-pointer"><Camera className="mx-auto mb-1"/><div className="text-sm">Add a photo of the send</div><input type="file" accept="image/*" onChange={handlePhoto} className="hidden"/>{isUploadingPhoto&&<div>Compressing...</div>}</label> : <div className="relative"><img src={sendForm.photoDataUrl} loading="lazy" className="photo-preview"/><button onClick={()=>setSendForm({...sendForm,photoDataUrl:''})} className="absolute top-2 right-2 bg-black/70 rounded-full p-1"><X size={15}/></button></div>}</div>
+              </div>
+
+              {/* Route Modal Ad — 300×100 slot, labeled Sponsored, before the log button */}
+              <div className="px-5 pb-3">
+                <div
+                  className="ad-route-modal w-full rounded-2xl bg-[#F8F7F4] border border-[#E5E2D9] flex items-center gap-4 px-4 py-3"
+                  style={{ minHeight: '64px' }}
+                  aria-label="Advertisement"
+                >
+                  <div className="text-2xl">⛰️</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] tracking-[1.5px] text-[#5C6666] uppercase">Sponsored by Patagonia</div>
+                    <div className="font-semibold text-sm text-[#1F2525]">Gear built for the mountains. Made to last.</div>
+                  </div>
+                </div>
               </div>
 
               <div className="p-5 pt-0">
